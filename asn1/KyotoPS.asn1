@@ -1,0 +1,28 @@
+KyotoPS DEFINITIONS ::= BEGIN
+	-- PDU-type 0
+	KPSGenericResponse ::= SEQUENCE {
+		commandId INTEGER (0..65535),
+		rc INTEGER,
+		errorDescription OCTET STRING
+	}
+
+	-- PDU-type 1
+	KPSSetOptionRequest ::= SEQUENCE {
+		commandId INTEGER (0..65535),
+		optCode INTEGER,
+		optValue OCTET STRING
+	}
+
+	-- PDU-type 2
+	KPSSetOptionResponse ::= KPSGenericResponse
+
+	-- PDU-type 3
+	KPSOpenDBRequest ::= SEQUENCE {
+		commandId INTEGER (0..65535),
+		dbFile OCTET STRING
+	}
+
+	-- PDU-type 4
+	KPSOpenDBResponse ::= KPSGenericResponse
+
+END
