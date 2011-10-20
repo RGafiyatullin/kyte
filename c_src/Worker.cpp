@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include <Worker.h>
+#include <assert.h>
 #ifdef WIN32
 	#include <windows.h>
 	#define sleep Sleep
@@ -23,14 +24,12 @@ namespace RG {
 		
 		while (!_Shutdown) {
 			ITask* currentJob = _Q->FetchTask();
-			if (!currentJob) {
-				printf("[Worker %i] Run() STARVATING!!!\n", _Idx);;
-				//sleep(ONE_SECOND);
-				continue;
-			}
+			assert(currentJob != NULL);
 			currentJob->Run();
+			if (currentJob->ToBeDisposedByWorker()) {
+				delete currentJob;
+			}
 		}
-		
 		
 		printf("[Worker %i] Run() end\n", _Idx);
 	}

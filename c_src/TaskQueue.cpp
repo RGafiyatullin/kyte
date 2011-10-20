@@ -36,25 +36,25 @@ namespace RG {
 			_Head->Data = task;
 			_Head->Next = NULL;
 		}
+		_Monitor.Pulse();
 	}
 	ITask* TaskQueue::FetchTask() {
 		Lock l(_Lock);
-		
-		if (_Head) {
-			QueueLink* exHead = _Head;
-			_Head = exHead->Next;
-			
-			ITask* task = exHead->Data;
-			delete exHead;
-			
-			if (!_Head) {
-				_Tail = NULL;
+		for (;;) {
+			if (_Head) {
+				QueueLink* exHead = _Head;
+				_Head = exHead->Next;
+				
+				ITask* task = exHead->Data;
+				delete exHead;
+				
+				if (!_Head) {
+					_Tail = NULL;
+				}
+				
+				return task;
 			}
-			
-			return task;
-		}
-		else {
-			return NULL; // TO BE DONE
+			_Monitor.Wait(_Lock);
 		}
 	}
 }

@@ -12,6 +12,7 @@ namespace RG {
 		virtual ~ITask();
 		
 		virtual void Run();
+		virtual bool ToBeDisposedByWorker() const;
 		
 		void SetName(const char* name);
 		const char* GetName() const;

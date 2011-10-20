@@ -16,7 +16,7 @@ RM_F = rm -f
 
 all: $(OUT_FILE)
 
-$(OUT_FILE): generated/kpsasn1.a $(OBJECTS) main.o
+$(OUT_FILE): $(OBJECTS) $(KPSASN_A) $(KYOTO_A) main.o
 	$(LD) -o $(OUT_FILE) $(LD_FLAGS) $(OBJECTS) $(KPSASN_A) $(KYOTO_A) main.o
 
 $(KPSASN_A): KyotoPS.asn1
@@ -62,5 +62,5 @@ main.o: KyotoPortServer.h main.cpp
 test.o: test.cpp
 	$(CXX) $(CXX_FLAGS) test.cpp
 
-test: test.o
+test: test.o $(OBJECTS) $(KYOTO_A) $(KPSASN_A)
 	$(LD) -o test $(LD_FLAGS) $(OBJECTS) $(KPSASN_A) $(KYOTO_A) test.o

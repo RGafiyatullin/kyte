@@ -11,6 +11,7 @@
 #endif
 
 #include <Mutex.h>
+#include <Monitor.h>
 
 namespace RG {
 	class ITask;
@@ -33,6 +34,7 @@ namespace RG {
 		Thread** _Threads;
 		
 		Mutex _Lock;
+		Monitor _Monitor;
 	public:
 		TaskQueue(int workersCount) ;
 		virtual ~TaskQueue();

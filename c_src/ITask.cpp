@@ -31,4 +31,7 @@ namespace RG {
 	const char* ITask::GetName() const {
 		return _Name;
 	}
+	bool ITask::ToBeDisposedByWorker() const {
+		return false;
+	}
 }
