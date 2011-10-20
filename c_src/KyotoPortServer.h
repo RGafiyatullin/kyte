@@ -8,43 +8,41 @@
 using kyotocabinet::PolyDB;
 
 /**
-* FSM states:
-* 0. negotiating
-* 1. open
-* 2. closed
 * 
-* # State: negotiating
-* When negotiating erlang side sends packets to the port-server.
-* This packets' series is terminated with nil-packet.
-* When nil-packet is got - server switches to the 'closed' state
+* Port server communicates with erlang using the PDUs described in KyotoPS.asn1 file.
+* 
+* * * Encapsulation levels * * *
+* Level-1 - Port-Server Packet: 4bytes - packet length, N-bytes packet-payload
+* Level-2 - KyotoPS PDU: 2bytes - PDU-type, Rest - BER-encoded PDU
+* Level-3 - BER-encoded PDU itself 
 * 
 */
 
-enum KPS_State {
-	st_negotiating,
-	st_open,
-	st_unmanaged
-};
+typedef struct KPSOptions_s {
+	long ThreadPoolSize;
+} KPSOptions_t;
 
-enum KPS_Nego_OptCode {
-	noc_db_file = 0
+enum KPSOptions {
+	opt_EndOfOptions = 0,
+	opt_ThreadPoolSize = 1
 };
 
 class KyotoPortServer : public PortServer {
 private:
-	char _DBFile[256];
-	PolyDB _DB;
+	static KyotoPortServer* Instance();
 
-	KPS_State _State;
+	KPSOptions_t _Options;
+	const KPSOptions_t& Options() const;
 
-	void state_negotiating();
-	void state_open();
-	void state_unmanaged();
+	static int GetPduType(const byte* packet, int packet_len);
+	int ReadKPSOptions();
 public:
 	KyotoPortServer();
 	virtual ~KyotoPortServer();
 
-	void start();
+	int run();
+
+
 };
 
 #endif // _KyotoPortServer_h

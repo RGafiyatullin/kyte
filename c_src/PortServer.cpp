@@ -3,11 +3,12 @@
 #include "PortServer.h"
 
 #include <stdlib.h>
+#include <assert.h>
 
 void check_io_failure() {
 	int err = errno;
 	if (err) {
-		fprintf(stderr, "\rKPS: io-failure - errno=%d\r\n", err);
+		fprintf(stderr, "\rKPS: io-failure - errno=%d\n", err);
 		exit(1);
 	}
 }
@@ -51,18 +52,23 @@ int PortServer::port_write_exact(const byte* buff, int len) {
 
 
 void PortServer::init() {
-	perror("\rKPS: PortServer::init() enter\r\n");
+	perror("\rKPS: PortServer::init() enter\n");
 	bool got_a_nil_packet = false;
 	do {
 		byte* packet = NULL;
 		int packet_len = recv_packet(&packet);
 
-		fprintf(stderr, "\r KPS: PortServer:init() : got %d bytes \r\n", packet_len);
+		assert(packet_len != -1);
+
+		fprintf(stderr, "\r KPS: PortServer:init() : got %d bytes\n", packet_len);
 
 		if (packet_len == 0)
 			got_a_nil_packet = true;
+		
+		free_packet(packet);
+		packet = NULL;
 	} while (!got_a_nil_packet);
-	perror("\rKPS: PortServer::init() leave\r\n");
+	perror("\rKPS: PortServer::init() leave\n");
 }
 
 void PortServer::send_packet(const byte* packet, int len) {
@@ -73,6 +79,10 @@ void PortServer::send_packet(const byte* packet, int len) {
 	port_write_exact(packet, len);
 }
 int  PortServer::recv_packet(byte** pPacket) {
+	if ( *pPacket ) { // do not want to leak this buffer
+		return -1;
+	}
+
 	byte pl_bytes[ERL_PACKET_LENGTH];
 	port_read_exact(pl_bytes, ERL_PACKET_LENGTH);
 	
