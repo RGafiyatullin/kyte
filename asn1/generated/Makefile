@@ -1,11 +1,3 @@
-# echo -n "PS_SOURCES = "; cat ./KyotoPS.asn1 | grep '::=' | grep -v DEFINITIONS | awk '{print $1}' | while read Name; do echo -n "$Name.c "; done
-# echo -n "PS_HEADERS = "; cat ./KyotoPS.asn1 | grep '::=' | grep -v DEFINITIONS | awk '{print $1}' | while read Name; do echo -n "$Name.h "; done
-# echo -n "PS_OBJECTS = "; cat ./KyotoPS.asn1 | grep '::=' | grep -v DEFINITIONS | awk '{print $1}' | while read Name; do echo -n "$Name.o "; done
-# cat ./KyotoPS.asn1 | grep '::=' | grep -v DEFINITIONS | awk '{print $1}' | while read Name; do echo -ne "$Name.o: $Name.c\n\t\$(CC) \$(CC_FLAGS) $Name.c\n\n"; done
-
-
-
-
 ASN1C = asn1c
 ASN_FLAGS = 
 
@@ -20,9 +12,13 @@ RM_F = rm -f
 
 LIB = generated.a
 
-PS_SOURCES = KPSGenericResponse.c KPSSetOptionRequest.c KPSSetOptionResponse.c KPSOpenDBRequest.c KPSOpenDBResponse.c
-PS_HEADERS = KPSGenericResponse.h KPSSetOptionRequest.h KPSSetOptionResponse.h KPSOpenDBRequest.h KPSOpenDBResponse.h
-PS_OBJECTS = KPSGenericResponse.o KPSSetOptionRequest.o KPSSetOptionResponse.o KPSOpenDBRequest.o KPSOpenDBResponse.o
+
+
+PS_SOURCES = KPSCommandId.c KPSDbHandle.c KPSBasicRequest.c KPSBasicResponse.c KPSSetOptionRequest.c KPSSetOptionResponse.c KPSDbOpenRequest.c KPSDbOpenResponse.c KPSDbCloseRequest.c KPSDbCloseResponse.c KPSDbClearRequest.c KPSDbClearResponse.c KPSDbCountRequest.c KPSDbCountResponse.c KPSDbSizeRequest.c KPSDbSizeResponse.c KPSDbSetRequest.c KPSDbSetResponse.c KPSDbGetRequest.c KPSDbGetResponse.c KPSDbRemoveRequest.c KPSDbRemoveResponse.c 
+PS_HEADERS = KPSCommandId.h KPSDbHandle.h KPSBasicRequest.h KPSBasicResponse.h KPSSetOptionRequest.h KPSSetOptionResponse.h KPSDbOpenRequest.h KPSDbOpenResponse.h KPSDbCloseRequest.h KPSDbCloseResponse.h KPSDbClearRequest.h KPSDbClearResponse.h KPSDbCountRequest.h KPSDbCountResponse.h KPSDbSizeRequest.h KPSDbSizeResponse.h KPSDbSetRequest.h KPSDbSetResponse.h KPSDbGetRequest.h KPSDbGetResponse.h KPSDbRemoveRequest.h KPSDbRemoveResponse.h 
+PS_OBJECTS = KPSCommandId.o KPSDbHandle.o KPSBasicRequest.o KPSBasicResponse.o KPSSetOptionRequest.o KPSSetOptionResponse.o KPSDbOpenRequest.o KPSDbOpenResponse.o KPSDbCloseRequest.o KPSDbCloseResponse.o KPSDbClearRequest.o KPSDbClearResponse.o KPSDbCountRequest.o KPSDbCountResponse.o KPSDbSizeRequest.o KPSDbSizeResponse.o KPSDbSetRequest.o KPSDbSetResponse.o KPSDbGetRequest.o KPSDbGetResponse.o KPSDbRemoveRequest.o KPSDbRemoveResponse.o
+
+
 
 GENERATED_SOURCES = $(PS_SOURCES) BIT_STRING.c INTEGER.c NativeEnumerated.c NativeInteger.c OCTET_STRING.c asn_codecs_prim.c ber_decoder.c ber_tlv_length.c ber_tlv_tag.c constr_SEQUENCE.c constr_TYPE.c constraints.c converter-sample.c der_encoder.c per_decoder.c per_encoder.c per_support.c xer_decoder.c xer_encoder.c xer_support.c
 
@@ -52,8 +48,19 @@ $(LIB): $(OBJECTS)
 	ar -r $(LIB) $(OBJECTS)
 
 
-KPSGenericResponse.o: KPSGenericResponse.c
-	$(CC) $(CC_FLAGS) KPSGenericResponse.c
+
+
+KPSCommandId.o: KPSCommandId.c
+	$(CC) $(CC_FLAGS) KPSCommandId.c
+
+KPSDbHandle.o: KPSDbHandle.c
+	$(CC) $(CC_FLAGS) KPSDbHandle.c
+
+KPSBasicRequest.o: KPSBasicRequest.c
+	$(CC) $(CC_FLAGS) KPSBasicRequest.c
+
+KPSBasicResponse.o: KPSBasicResponse.c
+	$(CC) $(CC_FLAGS) KPSBasicResponse.c
 
 KPSSetOptionRequest.o: KPSSetOptionRequest.c
 	$(CC) $(CC_FLAGS) KPSSetOptionRequest.c
@@ -61,11 +68,56 @@ KPSSetOptionRequest.o: KPSSetOptionRequest.c
 KPSSetOptionResponse.o: KPSSetOptionResponse.c
 	$(CC) $(CC_FLAGS) KPSSetOptionResponse.c
 
-KPSOpenDBRequest.o: KPSOpenDBRequest.c
-	$(CC) $(CC_FLAGS) KPSOpenDBRequest.c
+KPSDbOpenRequest.o: KPSDbOpenRequest.c
+	$(CC) $(CC_FLAGS) KPSDbOpenRequest.c
 
-KPSOpenDBResponse.o: KPSOpenDBResponse.c
-	$(CC) $(CC_FLAGS) KPSOpenDBResponse.c
+KPSDbOpenResponse.o: KPSDbOpenResponse.c
+	$(CC) $(CC_FLAGS) KPSDbOpenResponse.c
+
+KPSDbCloseRequest.o: KPSDbCloseRequest.c
+	$(CC) $(CC_FLAGS) KPSDbCloseRequest.c
+
+KPSDbCloseResponse.o: KPSDbCloseResponse.c
+	$(CC) $(CC_FLAGS) KPSDbCloseResponse.c
+
+KPSDbClearRequest.o: KPSDbClearRequest.c
+	$(CC) $(CC_FLAGS) KPSDbClearRequest.c
+
+KPSDbClearResponse.o: KPSDbClearResponse.c
+	$(CC) $(CC_FLAGS) KPSDbClearResponse.c
+
+KPSDbCountRequest.o: KPSDbCountRequest.c
+	$(CC) $(CC_FLAGS) KPSDbCountRequest.c
+
+KPSDbCountResponse.o: KPSDbCountResponse.c
+	$(CC) $(CC_FLAGS) KPSDbCountResponse.c
+
+KPSDbSizeRequest.o: KPSDbSizeRequest.c
+	$(CC) $(CC_FLAGS) KPSDbSizeRequest.c
+
+KPSDbSizeResponse.o: KPSDbSizeResponse.c
+	$(CC) $(CC_FLAGS) KPSDbSizeResponse.c
+
+KPSDbSetRequest.o: KPSDbSetRequest.c
+	$(CC) $(CC_FLAGS) KPSDbSetRequest.c
+
+KPSDbSetResponse.o: KPSDbSetResponse.c
+	$(CC) $(CC_FLAGS) KPSDbSetResponse.c
+
+KPSDbGetRequest.o: KPSDbGetRequest.c
+	$(CC) $(CC_FLAGS) KPSDbGetRequest.c
+
+KPSDbGetResponse.o: KPSDbGetResponse.c
+	$(CC) $(CC_FLAGS) KPSDbGetResponse.c
+
+KPSDbRemoveRequest.o: KPSDbRemoveRequest.c
+	$(CC) $(CC_FLAGS) KPSDbRemoveRequest.c
+
+KPSDbRemoveResponse.o: KPSDbRemoveResponse.c
+	$(CC) $(CC_FLAGS) KPSDbRemoveResponse.c
+	
+
+
 
 
 BIT_STRING.o: BIT_STRING.c

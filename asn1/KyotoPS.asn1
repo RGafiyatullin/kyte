@@ -1,28 +1,122 @@
 KyotoPS DEFINITIONS ::= BEGIN
+	-- ****** Primitives ******
+	
+	KPSCommandId ::= INTEGER (0..65535)
+	KPSDbHandle ::= INTEGER (0..MAX)
+    
+    
+    
+	-- ****** PDUs ******
+	
 	-- PDU-type 0
-	KPSGenericResponse ::= SEQUENCE {
-		commandId INTEGER (0..65535),
+	KPSBasicRequest ::= SEQUENCE {
+		commandId KPSCommandId,
+		dbHandle KPSDbHandle
+	}
+
+	-- PDU-type 1
+	KPSBasicResponse ::= SEQUENCE {
+		commandId KPSCommandId,
 		rc INTEGER,
 		errorDescription OCTET STRING
 	}
 
-	-- PDU-type 1
+	-- PDU-type 2
 	KPSSetOptionRequest ::= SEQUENCE {
-		commandId INTEGER (0..65535),
+		commandId KPSCommandId,
 		optCode INTEGER,
 		optValue OCTET STRING
 	}
 
-	-- PDU-type 2
-	KPSSetOptionResponse ::= KPSGenericResponse
-
 	-- PDU-type 3
-	KPSOpenDBRequest ::= SEQUENCE {
-		commandId INTEGER (0..65535),
+	KPSSetOptionResponse ::= KPSBasicResponse
+
+	-- PDU-type 4
+	KPSDbOpenRequest ::= SEQUENCE {
+		commandId KPSCommandId,
 		dbFile OCTET STRING
 	}
 
-	-- PDU-type 4
-	KPSOpenDBResponse ::= KPSGenericResponse
+	-- PDU-type 5
+	KPSDbOpenResponse ::= SEQUENCE {
+		commandId KPSCommandId,
+		rc INTEGER,
+		errorDescription OCTET STRING,
+
+		dbHandle KPSDbHandle OPTIONAL
+	}
+
+	-- PDU-type 6
+	KPSDbCloseRequest ::= KPSBasicRequest
+
+	--- PDU-type 7
+	KPSDbCloseResponse ::= KPSBasicResponse
+
+	-- PDU-type 8
+	KPSDbClearRequest ::= KPSBasicRequest
+
+	-- PDU-type 9
+	KPSDbClearResponse ::= KPSBasicResponse
+
+	-- PDU-type 10
+	KPSDbCountRequest ::= KPSBasicRequest
+
+	-- PDU-type 11
+	KPSDbCountResponse ::= SEQUENCE {
+		commandId KPSCommandId,
+		rc INTEGER,
+		errorDescription OCTET STRING,
+
+		count INTEGER(0..MAX) OPTIONAL
+	}
+
+	-- PDU-type 12
+	KPSDbSizeRequest ::= KPSBasicRequest
+
+	-- PDU-type 13
+	KPSDbSizeResponse ::= SEQUENCE {
+		commandId KPSCommandId,
+		rc INTEGER,
+		errorDescription OCTET STRING,
+
+		size INTEGER(0..MAX) OPTIONAL
+	}
+
+	-- PDU-type 14
+	KPSDbSetRequest ::= SEQUENCE {
+		commandId KPSCommandId,
+
+		dbHandle  KPSDbHandle,
+		key       OCTET STRING,
+		value     OCTET STRING
+	}
+
+	-- PDU-type 15
+	KPSDbSetResponse ::= KPSBasicResponse
+
+	-- PDU-type 16
+	KPSDbGetRequest ::= SEQUENCE {
+		commandId KPSCommandId,
+
+		dbHandle  KPSDbHandle,
+		key	      OCTET STRING
+	}
+	-- PDU-type 17
+	KPSDbGetResponse ::= SEQUENCE {
+		commandId KPSCommandId,
+		rc INTEGER,
+		errorDescription OCTET STRING,
+
+		value OCTET STRING OPTIONAL
+	}
+	-- PDU-type 18
+	KPSDbRemoveRequest ::= SEQUENCE {
+		commandId KPSCommandId,
+
+		dbHandle  KPSDbHandle,
+		key	      OCTET STRING
+	}
+	-- PDU-type 19
+	KPSDbRemoveResponse ::= KPSBasicResponse
 
 END
