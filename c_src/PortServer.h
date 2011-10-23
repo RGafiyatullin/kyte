@@ -9,7 +9,7 @@
 
 #define ERL_PACKET_LENGTH 4
 
-typedef unsigned char byte;
+typedef uint8_t byte;
 
 /**
 * Protocol:

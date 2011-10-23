@@ -2,6 +2,8 @@
 
 -export([
 	pdu_type/1,
+	rec_type/1,
+
 	encode/2,
 	decode/2
 ]).
@@ -26,6 +28,10 @@ pdu_type('KPSDbGetRequest')			-> 16;
 pdu_type('KPSDbGetResponse')		-> 17;
 pdu_type('KPSDbRemoveRequest')		-> 18;
 pdu_type('KPSDbRemoveResponse')		-> 19.
+
+
+rec_type(4) -> 'KPSDbOpenRequest';
+rec_type(5) -> 'KPSDbOpenResponse'.
 
 encode(RecType, Record) ->
 	{ok, DeepList} = 'KyotoPS':encode(RecType, Record),

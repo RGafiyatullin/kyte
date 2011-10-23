@@ -7,6 +7,6 @@ int main(int, char**) {
 	perror("KPS: main enter\n");
 	KyotoPortServer portSrv;
 	portSrv.init();
-	return portSrv.run();
+	return portSrv.Run();
 }
 

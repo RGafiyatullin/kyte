@@ -1,15 +1,25 @@
 #include <KPSSetOptionRequest.h>
 
-#include "KyotoPortServer.h"
+#include <KyotoPortServer.h>
+#include <KPSTask.h>
 
 using kyotocabinet::PolyDB;
 
 static KyotoPortServer* _Self = NULL;
 
-KyotoPortServer::KyotoPortServer() : PortServer() {
+KyotoPortServer::KyotoPortServer() : 
+	PortServer() ,
+	_RequestQueue(NULL) ,
+	_ResponseQueue(NULL)
+{
 	_Self = this;
 }
-KyotoPortServer::~KyotoPortServer() {}
+KyotoPortServer::~KyotoPortServer() {
+	/*
+	delete _RequestQueue;
+	delete _ResponseQueue;
+	*/
+}
 
 KyotoPortServer* KyotoPortServer::Instance() {
 	return _Self;
@@ -30,6 +40,17 @@ int KyotoPortServer::GetPduType(const byte* packet, int packet_len) {
 	return pdu_type;
 }
 
+int KyotoPortServer::GetCommandId(const byte* packet, int packet_len) {
+	if (packet_len < 4) {
+		return -1;
+	}
+	byte l, h;
+	l = packet[2];
+	h = packet[3];
+	int command_id = l + (h << 8);
+	return command_id;
+}
+
 int KyotoPortServer::ReadKPSOptions() {
 	bool keep_reading = true;
 	do {
@@ -39,12 +60,15 @@ int KyotoPortServer::ReadKPSOptions() {
 		assert(packet_len != -1);
 		
 		int pdu_type = GetPduType(packet, packet_len);
-		fprintf(stderr, "\rKyotoPortServer::ReadKPSOptions() pdu_type = %d\n", pdu_type);
-		//assert(pdu_type != -1);
+		int command_id = GetCommandId(packet, packet_len);
+		fprintf(stderr, "\rKyotoPortServer::ReadKPSOptions() pdu_type = %d, command_id = %d\n", pdu_type, command_id);
+		
 		assert(pdu_type == 2);
+		assert(command_id != -1);
+
 
 		KPSSetOptionRequest_t * setOptionReq = NULL;
-		asn_dec_rval_t dr =	ber_decode(0, &asn_DEF_KPSSetOptionRequest, (void**)&setOptionReq, packet + 2, packet_len - 2);
+		asn_dec_rval_t dr =	ber_decode(0, &asn_DEF_KPSSetOptionRequest, (void**)&setOptionReq, packet + 4, packet_len - 4);
 		assert(dr.code == RC_OK);
 
 		fprintf(stderr, "\rKyotoPortServer::ReadKPSOptions() successfully decoded SetOptionReq\n");
@@ -56,6 +80,7 @@ int KyotoPortServer::ReadKPSOptions() {
 			case opt_ThreadPoolSize: {
 				long iThrPoolSize;
 				asn_INTEGER2long( setOptionReq->optValueInteger, &iThrPoolSize);
+
 				_Options.ThreadPoolSize = iThrPoolSize;
 				fprintf(stderr, "\rKyotoPortServer::ReadKPSOptions() ThreadPoolSize = %d\n", iThrPoolSize);
 				break;
@@ -66,27 +91,48 @@ int KyotoPortServer::ReadKPSOptions() {
 				break;
 			default:
 				fprintf(stderr, "\rKyotoPortServer::ReadKPSOptions() Unknown optCode: %d\n", iOptCode);
+				return 1;
 		}
-
+		
+		asn_DEF_KPSSetOptionRequest.free_struct(&asn_DEF_KPSSetOptionRequest, setOptionReq, 0 /* free the pointer too */);
+		
 		free_packet(packet);
 		packet = NULL;
 	} while (keep_reading);
-
-	return 123; // DEBUG
-
+	
 	return 0;
 }
 
-int KyotoPortServer::run() {
+int KyotoPortServer::InitThreadPool() {
+	_RequestQueue = new RG::TaskQueue(_Options.ThreadPoolSize);
+	_ResponseQueue = new RG::TaskQueue(1);
+	return 0;
+}
+
+int KyotoPortServer::RecvLoop() {
+	bool keep_running = true;
+	do {
+		byte* packet = NULL;
+		int packet_len = recv_packet(&packet);
+		assert(packet_len != -1);
+
+		KPSTask* task = new KPSTask(this, packet, packet_len);
+		_RequestQueue->AddTask(task);
+
+	} while (keep_running);
+	return 0;
+}
+
+int KyotoPortServer::Run() {
 	fprintf(stderr, "\rKyotoPortServer::start()\n");
 
-	int readOpts = ReadKPSOptions();
-	if (readOpts) {
-		return readOpts;
-	}
+	assert( ReadKPSOptions() == 0 );
+	assert( InitThreadPool() == 0 );
 
-	return 0;
+	return RecvLoop();
 }
 
-
+void KyotoPortServer::Respond(KPSResponse * responseTask) {
+	_ResponseQueue->AddTask(responseTask);
+}
 

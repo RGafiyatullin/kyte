@@ -3,7 +3,9 @@
 
 #include <kcpolydb.h>
 
-#include "PortServer.h"
+#include <PortServer.h>
+
+#include <TaskQueue.h>
 
 using kyotocabinet::PolyDB;
 
@@ -27,6 +29,8 @@ enum KPSOptions {
 	opt_ThreadPoolSize = 1
 };
 
+class KPSResponse;
+
 class KyotoPortServer : public PortServer {
 private:
 	static KyotoPortServer* Instance();
@@ -34,15 +38,22 @@ private:
 	KPSOptions_t _Options;
 	const KPSOptions_t& Options() const;
 
-	static int GetPduType(const byte* packet, int packet_len);
 	int ReadKPSOptions();
+
+	RG::TaskQueue* _RequestQueue;
+	RG::TaskQueue* _ResponseQueue;
+
+	int InitThreadPool();
+	int RecvLoop();
 public:
 	KyotoPortServer();
 	virtual ~KyotoPortServer();
 
-	int run();
+	static int GetPduType(const byte* packet, int packet_len);
+	static int GetCommandId(const byte* packet, int packet_len);
+	int Run();
 
-
+	void Respond(KPSResponse * responseTask);
 };
 
 #endif // _KyotoPortServer_h
