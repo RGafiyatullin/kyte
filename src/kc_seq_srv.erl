@@ -1,5 +1,7 @@
--module(kps_seq_srv).
+-module(kc_seq_srv).
 -behaviour(gen_server).
+
+-define(max_seq_value, 65535).
 
 -export([
 	start_link/0,
@@ -20,13 +22,17 @@
 }).
 
 start_link() ->
+	io:format("kc_seq_srv:start_link()~n", []),
 	gen_server:start_link({local, ?MODULE}, ?MODULE, {}, []).
 
 init({}) ->
-	{ok, #state{ current = 1 }}.
+	{ok, #state{ current = 0 }}.
 
 handle_call(get_next, _From, State = #state{ current = Current }) ->
-	{reply, Current, State#state{ current = (Current + 1) }};
+	{reply, Current, State#state{ current = if
+												Current == ?max_seq_value -> 0;
+												true -> Current + 1
+											end }};
 
 handle_call(Request, _From, State = #state{}) ->
 	{stop, {bad_arg, Request}, State}.

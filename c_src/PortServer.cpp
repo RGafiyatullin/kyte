@@ -2,13 +2,15 @@
 
 #include <PortServer.h>
 
+#include <kps.h>
+
 #include <stdlib.h>
 #include <assert.h>
 
 void check_io_failure() {
 	int err = errno;
 	if (err) {
-		fprintf(stderr, "\rKPS: io-failure - errno=%d\n", err);
+		fprintf(dbgout, "\rKPS: io-failure - errno=%d\n", err);
 		exit(1);
 	}
 }
@@ -47,28 +49,23 @@ int PortServer::port_write_exact(const byte* buff, int len) {
 			return i;
 		wrote += i;
 	} while (wrote < len);
+	
 	return len;
 }
 
 
 void PortServer::init() {
-	perror("\rKPS: PortServer::init() enter\n");
 	bool got_a_nil_packet = false;
 	do {
 		byte* packet = NULL;
 		int packet_len = recv_packet(&packet);
-
 		assert(packet_len != -1);
-
-		fprintf(stderr, "\r KPS: PortServer:init() : got %d bytes\n", packet_len);
-
 		if (packet_len == 0)
 			got_a_nil_packet = true;
 		
 		free_packet(packet);
 		packet = NULL;
 	} while (!got_a_nil_packet);
-	perror("\rKPS: PortServer::init() leave\n");
 }
 
 void PortServer::send_packet(const byte* packet, int len) {

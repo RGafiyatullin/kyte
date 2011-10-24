@@ -1,5 +1,5 @@
 
--module(kyoto_client_sup).
+-module(kc_port_srv_sup).
 
 -behaviour(supervisor).
 
@@ -24,8 +24,7 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    {ok, { {one_for_one, 5, 10}, [
-    	{seq_srv, {kc_seq_srv, start_link, []}, permanent, 5000, worker, [kc_seq_srv]},
-    	{port_srv_sup, {kc_port_srv_sup, start_link, []}, permanent, infinity, supervisor, [kc_port_srv_sup]}
+    {ok, { {simple_one_for_one, 5, 10}, [
+    	{port_srv, {kc_port_srv, start_link, []}, temporary, 5000, worker, [kc_port_srv]}
     ]} }.
 

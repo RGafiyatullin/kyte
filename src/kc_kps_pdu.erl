@@ -1,4 +1,4 @@
--module(kps_pdu).
+-module(kc_kps_pdu).
 
 -export([
 	pdu_type/1,
@@ -31,7 +31,28 @@ pdu_type('KPSDbRemoveResponse')		-> 19.
 
 
 rec_type(4) -> 'KPSDbOpenRequest';
-rec_type(5) -> 'KPSDbOpenResponse'.
+rec_type(5) -> 'KPSDbOpenResponse';
+rec_type(6) -> 'KPSBasicRequest';
+rec_type(7) -> 'KPSBasicResponse';
+rec_type(8) -> 'KPSDbClearRequest';
+rec_type(9) -> 'KPSDbClearResponse';
+rec_type(10) -> 'KPSDbCountRequest';
+rec_type(11) -> 'KPSDbCountResponse';
+rec_type(12) -> 'KPSDbSizeRequest';
+rec_type(13) -> 'KPSDbSizeResponse';
+rec_type(14) -> 'KPSDbSetRequest';
+rec_type(15) -> 'KPSDbSetResponse';
+rec_type(16) -> 'KPSDbGetRequest';
+rec_type(17) -> 'KPSDbGetResponse';
+rec_type(18) -> 'KPSDbRemoveRequest';
+rec_type(19) -> 'KPSDbRemoveResponse';
+
+rec_type(_) -> 'unknown_pdu_type'.
+
+
+
+
+
 
 encode(RecType, Record) ->
 	{ok, DeepList} = 'KyotoPS':encode(RecType, Record),

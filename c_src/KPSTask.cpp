@@ -1,5 +1,7 @@
 #include <KPSTask.h>
 
+#include <kps.h>
+
 #include <KyotoPortServer.h>
 #include <kcpolydb.h>
 
@@ -87,7 +89,7 @@ done > ./auto.cpp
 cat ./temp  | sed -e 's/->//' | sed -e "s/'//g" | sed -e 's/)//' | sed -e 's/;//' | sed -e 's/\.//' \
 | grep 'Request' | awk '{print $1}' \
 | while read R; do 
-	echo -ne "void KPSTask::process_${R}(const ${R}_t * req) {\n\tfprintf(stderr, \"\\\\rKPSTask::process_${R}\\\\n\");\n}\n"
+	echo -ne "void KPSTask::process_${R}(const ${R}_t * req) {\n\t//fprintf(dbgout, \"\\\\rKPSTask::process_${R}\\\\n\");\n}\n"
 done > ./auto.cpp
 
 	*/
@@ -113,7 +115,7 @@ done > ./auto.cpp
 		CASE_REQ_TYPE(KPSDbGetRequest)
 		CASE_REQ_TYPE(KPSDbRemoveRequest)
 		default:
-			fprintf(stderr, "\rGot a PDU (type %d)\n", pdu_type);
+			fprintf(dbgout, "\rGot a PDU (type %d)\n", pdu_type);
 		break;
 	}
 	#undef CASE_REQ_TYPE
@@ -126,14 +128,12 @@ bool KPSTask::ToBeDisposedByWorker() const {
 
 
 void KPSTask::process_KPSBasicRequest(const KPSBasicRequest_t * req) {
-	fprintf(stderr, "\rKPSTask::process_KPSBasicRequest\n");
+	fprintf(dbgout, "\rKPSTask::process_KPSBasicRequest\n");
 }
 void KPSTask::process_KPSSetOptionRequest(const KPSSetOptionRequest_t * req) {
-	fprintf(stderr, "\rKPSTask::process_KPSSetOptionRequest\n");
+	fprintf(dbgout, "\rKPSTask::process_KPSSetOptionRequest\n");
 }
 void KPSTask::process_KPSDbOpenRequest(const KPSDbOpenRequest_t * req) {
-	fprintf(stderr, "\rKPSTask::process_KPSDbOpenRequest\n");
-
 	char * dbFile = new char[req->dbFile.size + 1];
 	memcpy(dbFile, req->dbFile.buf, req->dbFile.size);
 	dbFile[req->dbFile.size] = '\0';
@@ -145,62 +145,291 @@ void KPSTask::process_KPSDbOpenRequest(const KPSDbOpenRequest_t * req) {
 	INTEGER_t dbHandle = {0};
 	OCTET_STRING_t errorDescription = {NULL};
 
-	fprintf(stderr, "\rKPSTask::process_KPSDbOpenRequest prior to real open\n");
+	assert( asn_long2INTEGER(&rc, 0) == 0 );
+	assert( asn_long2INTEGER(&dbHandle, 0) == 0 );
+	assert( OCTET_STRING_fromBuf(&errorDescription, "", -1) == 0 );
+
+	response.dbHandle = NULL;
+	response.errorDescription = NULL;
+
 	if ( db->open(dbFile, PolyDB::OCREATE | PolyDB::OWRITER) ) {
-		fprintf(stderr, "\rKPSTask::process_KPSDbOpenRequest open succeeded\n");
-		
-		asn_long2INTEGER(&rc, 0);
-		response.rc = rc;
-		
-		asn_long2INTEGER(&dbHandle, (long)db);
+		assert( asn_long2INTEGER(&rc, 0) == 0 );
+		assert( asn_long2INTEGER(&dbHandle, (long)db) == 0 );
+
 		response.dbHandle = &dbHandle;
-		fprintf(stderr, "\rKPSTask::process_KPSDbOpenRequest db handle = %d\n", (long)db);
 	}
 	else
 	{
-		fprintf(stderr, "\rKPSTask::process_KPSDbOpenRequest open failed\n");
-		
-		asn_long2INTEGER(&rc, 1);
-		response.rc = rc;
+		assert( asn_long2INTEGER(&rc, 1) == 0 );
+		assert( OCTET_STRING_fromBuf(&errorDescription, db->error().name(), -1) == 0 );
 
-		int fromBufRet = OCTET_STRING_fromBuf(&errorDescription, db->error().name(), -1);
-		assert(fromBufRet == 0);
 		response.errorDescription = &errorDescription;
 	}
 	
+	response.rc = rc;
+	
 	uint8_t* buffer = new uint8_t[ENC_BUFF_SIZE];
-	buffer[0] = 5;
+	buffer[0] = pdu_KPSDbOpenResponse;
 	buffer[1] = 0;
 	buffer[2] = _CID[0];
 	buffer[3] = _CID[1];
-	asn_enc_rval_t er = der_encode_to_buffer(&asn_DEF_KPSSetOptionResponse, (void*)&response, buffer + 4, ENC_BUFF_SIZE - 4);
+	asn_enc_rval_t er = der_encode_to_buffer(&asn_DEF_KPSDbOpenResponse, (void*)&response, buffer + 4, ENC_BUFF_SIZE - 4);
 
 	assert(er.encoded != -1);
-	fprintf(stderr, "\rKPSTask::process_KPSDbOpenRequest er.encoded = %d\n", er.encoded);
 	_KPS->Respond(new KPSResponse(_KPS, buffer, er.encoded + 4));
 
 	delete [] dbFile;
 }
 void KPSTask::process_KPSDbCloseRequest(const KPSDbCloseRequest_t * req) {
-	fprintf(stderr, "\rKPSTask::process_KPSDbCloseRequest\n");
+	PolyDB * db;
+	assert( asn_INTEGER2long(&req->dbHandle, (long*)&db) == 0 );
+	assert( db != NULL );
+	bool ok = db->close();
+
+	KPSDbCloseResponse_t response = {0};
+	INTEGER_t rc = {0};
+	OCTET_STRING_t errorDescription = {0};
+
+	if (ok) {
+		assert( asn_long2INTEGER(&rc, 0) == 0 );
+	}
+	else {
+		assert( asn_long2INTEGER(&rc, 1) == 0 );
+		assert( OCTET_STRING_fromBuf(&errorDescription, db->error().name(), -1) == 0 );
+
+		response.errorDescription = &errorDescription;
+	}
+	response.rc = rc;
+
+	uint8_t* buffer = new uint8_t[ENC_BUFF_SIZE];
+	buffer[0] = pdu_KPSDbCloseResponse;
+	buffer[1] = 0;
+	buffer[2] = _CID[0];
+	buffer[3] = _CID[1];
+	asn_enc_rval_t er = der_encode_to_buffer(&asn_DEF_KPSDbCloseResponse, (void*)&response, buffer + 4, ENC_BUFF_SIZE - 4);
+
+	assert(er.encoded != -1);
+	_KPS->Respond(new KPSResponse(_KPS, buffer, er.encoded + 4));
+
+	delete db;
 }
 void KPSTask::process_KPSDbClearRequest(const KPSDbClearRequest_t * req) {
-	fprintf(stderr, "\rKPSTask::process_KPSDbClearRequest\n");
+	PolyDB * db;
+	assert( asn_INTEGER2long(&req->dbHandle, (long*)&db) == 0 );
+	assert( db != NULL );
+	bool ok = db->close();
+
+	KPSDbCloseResponse_t response = {0};
+	INTEGER_t rc = {0};
+	OCTET_STRING_t errorDescription = {0};
+
+	if (ok) {
+		assert( asn_long2INTEGER(&rc, 0) == 0 );
+	}
+	else {
+		assert( asn_long2INTEGER(&rc, 1) == 0 );
+		assert( OCTET_STRING_fromBuf(&errorDescription, db->error().name(), -1) == 0 );
+
+		response.errorDescription = &errorDescription;
+	}
+	response.rc = rc;
+
+	uint8_t* buffer = new uint8_t[ENC_BUFF_SIZE];
+	buffer[0] = pdu_KPSDbClearResponse;
+	buffer[1] = 0;
+	buffer[2] = _CID[0];
+	buffer[3] = _CID[1];
+	asn_enc_rval_t er = der_encode_to_buffer(&asn_DEF_KPSDbClearResponse, (void*)&response, buffer + 4, ENC_BUFF_SIZE - 4);
+
+	assert(er.encoded != -1);
+	_KPS->Respond(new KPSResponse(_KPS, buffer, er.encoded + 4));
+
 }
 void KPSTask::process_KPSDbCountRequest(const KPSDbCountRequest_t * req) {
-	fprintf(stderr, "\rKPSTask::process_KPSDbCountRequest\n");
+	PolyDB * db;
+	assert( asn_INTEGER2long(&req->dbHandle, (long*)&db) == 0 );
+	assert( db != NULL );
+	int64_t cnt = db->count();
+
+	KPSDbCountResponse_t response = {0};
+	INTEGER_t rc = {0};
+	INTEGER_t count = {0};
+	OCTET_STRING_t errorDescription = {0};
+
+	if (cnt != -1) {
+		assert( asn_long2INTEGER(&rc, 0) == 0 );
+		assert( asn_long2INTEGER(&count, cnt) == 0 );
+
+		response.count = &count;
+	}
+	else {
+		assert( asn_long2INTEGER(&rc, 1) == 0 );
+		assert( OCTET_STRING_fromBuf(&errorDescription, db->error().name(), -1) == 0 );
+
+		response.errorDescription = &errorDescription;
+	}
+	response.rc = rc;
+
+	uint8_t* buffer = new uint8_t[ENC_BUFF_SIZE];
+	buffer[0] = pdu_KPSDbCountResponse;
+	buffer[1] = 0;
+	buffer[2] = _CID[0];
+	buffer[3] = _CID[1];
+	asn_enc_rval_t er = der_encode_to_buffer(&asn_DEF_KPSDbCountResponse, (void*)&response, buffer + 4, ENC_BUFF_SIZE - 4);
+
+	assert(er.encoded != -1);
+	_KPS->Respond(new KPSResponse(_KPS, buffer, er.encoded + 4));
+
 }
 void KPSTask::process_KPSDbSizeRequest(const KPSDbSizeRequest_t * req) {
-	fprintf(stderr, "\rKPSTask::process_KPSDbSizeRequest\n");
+	PolyDB * db;
+	assert( asn_INTEGER2long(&req->dbHandle, (long*)&db) == 0 );
+	assert( db != NULL );
+	int64_t sz = db->size();
+
+	KPSDbSizeResponse_t response = {0};
+	INTEGER_t rc = {0};
+	INTEGER_t size = {0};
+	OCTET_STRING_t errorDescription = {0};
+
+	if (sz != -1) {
+		assert( asn_long2INTEGER(&rc, 0) == 0 );
+		assert( asn_long2INTEGER(&size, sz) == 0 );
+
+		response.size = &size;
+	}
+	else {
+		assert( asn_long2INTEGER(&rc, 1) == 0 );
+		assert( OCTET_STRING_fromBuf(&errorDescription, db->error().name(), -1) == 0 );
+
+		response.errorDescription = &errorDescription;
+	}
+	response.rc = rc;
+
+	uint8_t* buffer = new uint8_t[ENC_BUFF_SIZE];
+	buffer[0] = pdu_KPSDbSizeResponse;
+	buffer[1] = 0;
+	buffer[2] = _CID[0];
+	buffer[3] = _CID[1];
+	asn_enc_rval_t er = der_encode_to_buffer(&asn_DEF_KPSDbSizeResponse, (void*)&response, buffer + 4, ENC_BUFF_SIZE - 4);
+
+	assert(er.encoded != -1);
+	_KPS->Respond(new KPSResponse(_KPS, buffer, er.encoded + 4));
 }
 void KPSTask::process_KPSDbSetRequest(const KPSDbSetRequest_t * req) {
-	fprintf(stderr, "\rKPSTask::process_KPSDbSetRequest\n");
+	PolyDB * db;
+	assert( asn_INTEGER2long(&req->dbHandle, (long*)&db) == 0 );
+	assert( db != NULL );
+	
+	
+	KPSDbSetResponse_t response = {0};
+	INTEGER_t rc = {0};
+	OCTET_STRING_t errorDescription = {0};
+	OCTET_STRING_t key = req->key;
+	OCTET_STRING_t val = req->value;
+	
+	bool ok = db->set((char *)key.buf, key.size, (char *)val.buf, val.size);
+
+	if (ok) {
+		assert( asn_long2INTEGER(&rc, 0) == 0 );
+	}
+	else {
+		assert( asn_long2INTEGER(&rc, 1) == 0 );
+		assert( OCTET_STRING_fromBuf(&errorDescription, db->error().name(), -1) == 0 );
+
+		response.errorDescription = &errorDescription;
+	}
+	response.rc = rc;
+
+	uint8_t* buffer = new uint8_t[ENC_BUFF_SIZE];
+	buffer[0] = pdu_KPSDbSetResponse;
+	buffer[1] = 0;
+	buffer[2] = _CID[0];
+	buffer[3] = _CID[1];
+	asn_enc_rval_t er = der_encode_to_buffer(&asn_DEF_KPSDbSetResponse, (void*)&response, buffer + 4, ENC_BUFF_SIZE - 4);
+	
+	assert(er.encoded != -1);
+
+	asn_DEF_KPSDbSetResponse.free_struct(&asn_DEF_KPSDbSetResponse, (void*)&response, 1);
+
+	_KPS->Respond(new KPSResponse(_KPS, buffer, er.encoded + 4));
 }
 void KPSTask::process_KPSDbGetRequest(const KPSDbGetRequest_t * req) {
-	fprintf(stderr, "\rKPSTask::process_KPSDbGetRequest\n");
+	PolyDB * db;
+	assert( asn_INTEGER2long(&req->dbHandle, (long*)&db) == 0 );
+	assert( db != NULL );
+	
+	
+	KPSDbGetResponse_t response = {0};
+	INTEGER_t rc = {0};
+	OCTET_STRING_t errorDescription = {0};
+	OCTET_STRING_t key = req->key;
+	OCTET_STRING_t val = {0};
+	val.buf = new uint8_t[ENC_BUFF_SIZE - 1024];
+	
+	int64_t val_size = db->get((char *)key.buf, key.size, (char *)val.buf, ENC_BUFF_SIZE - 1024);
+
+	if (val_size != -1) {
+		assert( asn_long2INTEGER(&rc, 0) == 0 );
+		val.size = val_size;
+
+		response.value = &val;
+	}
+	else {
+		assert( asn_long2INTEGER(&rc, 1) == 0 );
+		assert( OCTET_STRING_fromBuf(&errorDescription, db->error().name(), -1) == 0 );
+
+		response.errorDescription = &errorDescription;
+	}
+	response.rc = rc;
+
+	uint8_t* buffer = new uint8_t[ENC_BUFF_SIZE];
+	buffer[0] = pdu_KPSDbGetResponse;
+	buffer[1] = 0;
+	buffer[2] = _CID[0];
+	buffer[3] = _CID[1];
+	asn_enc_rval_t er = der_encode_to_buffer(&asn_DEF_KPSDbGetResponse, (void*)&response, buffer + 4, ENC_BUFF_SIZE - 4);
+
+	assert(er.encoded != -1);
+	_KPS->Respond(new KPSResponse(_KPS, buffer, er.encoded + 4));
+
+	delete val.buf;
+	val.buf = NULL;
+	val.size = 0;
 }
 void KPSTask::process_KPSDbRemoveRequest(const KPSDbRemoveRequest_t * req) {
-	fprintf(stderr, "\rKPSTask::process_KPSDbRemoveRequest\n");
+	PolyDB * db;
+	assert( asn_INTEGER2long(&req->dbHandle, (long*)&db) == 0 );
+	assert( db != NULL );
+	
+	
+	KPSDbRemoveResponse_t response = {0};
+	INTEGER_t rc = {0};
+	OCTET_STRING_t errorDescription = {0};
+	OCTET_STRING_t key = req->key;
+
+	bool ok = db->remove((char *)key.buf, key.size);
+
+	if (ok) {
+		assert( asn_long2INTEGER(&rc, 0) == 0 );
+	}
+	else {
+		assert( asn_long2INTEGER(&rc, 1) == 0 );
+		assert( OCTET_STRING_fromBuf(&errorDescription, db->error().name(), -1) == 0 );
+
+		response.errorDescription = &errorDescription;
+	}
+	response.rc = rc;
+
+	uint8_t* buffer = new uint8_t[ENC_BUFF_SIZE];
+	buffer[0] = pdu_KPSDbRemoveResponse;
+	buffer[1] = 0;
+	buffer[2] = _CID[0];
+	buffer[3] = _CID[1];
+	asn_enc_rval_t er = der_encode_to_buffer(&asn_DEF_KPSDbRemoveResponse, (void*)&response, buffer + 4, ENC_BUFF_SIZE - 4);
+
+	assert(er.encoded != -1);
+	_KPS->Respond(new KPSResponse(_KPS, buffer, er.encoded + 4));
 }
 
 

@@ -38,38 +38,38 @@ clean:
 	$(RM_F) test.o
 	$(RM_F) test
 
-KPSTask.o: KPSTask.cpp KPSTask.h ITask.h $(KPSASN_A)
+KPSTask.o: KPSTask.cpp KPSTask.h ITask.h $(KPSASN_A) kps.h
 	$(CXX) $(CXX_FLAGS) KPSTask.cpp
 
-Worker.o: Worker.cpp Worker.h TaskQueue.h
+Worker.o: Worker.cpp Worker.h TaskQueue.h kps.h
 	$(CXX) $(CXX_FLAGS) Worker.cpp
 
-TaskQueue.o: TaskQueue.cpp TaskQueue.h ITask.h Worker.h Thread.h
+TaskQueue.o: TaskQueue.cpp TaskQueue.h ITask.h Worker.h Thread.h kps.h
 	$(CXX) $(CXX_FLAGS) TaskQueue.cpp
 
-Monitor.o: Mutex.h Monitor.h Monitor.cpp
+Monitor.o: Mutex.h Monitor.h Monitor.cpp kps.h
 	$(CXX) $(CXX_FLAGS) Monitor.cpp
 
-Thread.o: Thread.cpp Thread.h ITask.h
+Thread.o: Thread.cpp Thread.h ITask.h kps.h
 	$(CXX) $(CXX_FLAGS) Thread.cpp
 
-ITask.o: ITask.cpp ITask.h
+ITask.o: ITask.cpp ITask.h kps.h
 	$(CXX) $(CXX_FLAGS) ITask.cpp
 
-Mutex.o: Mutex.cpp Mutex.h
+Mutex.o: Mutex.cpp Mutex.h kps.h
 	$(CXX) $(CXX_FLAGS) Mutex.cpp
 
-PortServer.o: PortServer.cpp PortServer.h
+PortServer.o: PortServer.cpp PortServer.h kps.h
 	$(CXX) $(CXX_FLAGS) PortServer.cpp
 
-KyotoPortServer.o: $(KPSASN_A) PortServer.o KyotoPortServer.cpp KyotoPortServer.h
+KyotoPortServer.o: $(KPSASN_A) PortServer.o KyotoPortServer.cpp KyotoPortServer.h kps.h
 	$(CXX) $(CXX_FLAGS) KyotoPortServer.cpp
 
-main.o: KyotoPortServer.h main.cpp
+main.o: KyotoPortServer.h main.cpp kps.h
 	$(CXX) $(CXX_FLAGS) main.cpp
 
-test.o: test.cpp
+test.o: test.cpp kps.h
 	$(CXX) $(CXX_FLAGS) test.cpp
 
-test: test.o $(OBJECTS) $(KYOTO_A) $(KPSASN_A)
+test: test.o $(OBJECTS) $(KYOTO_A) $(KPSASN_A) kps.h
 	$(LD) -o test $(LD_FLAGS) $(OBJECTS) $(KPSASN_A) $(KYOTO_A) test.o

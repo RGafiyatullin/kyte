@@ -1,5 +1,7 @@
 #include <KPSSetOptionRequest.h>
 
+#include <kps.h>
+
 #include <KyotoPortServer.h>
 #include <KPSTask.h>
 
@@ -8,7 +10,7 @@ using kyotocabinet::PolyDB;
 static KyotoPortServer* _Self = NULL;
 
 KyotoPortServer::KyotoPortServer() : 
-	PortServer() ,
+	PortServer(),
 	_RequestQueue(NULL) ,
 	_ResponseQueue(NULL)
 {
@@ -56,12 +58,11 @@ int KyotoPortServer::ReadKPSOptions() {
 	do {
 		byte* packet = NULL;
 		int packet_len = recv_packet(&packet);
-		fprintf(stderr, "\rKyotoPortServer::ReadKPSOptions() len = %d\n", packet_len);
+		
 		assert(packet_len != -1);
 		
 		int pdu_type = GetPduType(packet, packet_len);
 		int command_id = GetCommandId(packet, packet_len);
-		fprintf(stderr, "\rKyotoPortServer::ReadKPSOptions() pdu_type = %d, command_id = %d\n", pdu_type, command_id);
 		
 		assert(pdu_type == 2);
 		assert(command_id != -1);
@@ -70,8 +71,6 @@ int KyotoPortServer::ReadKPSOptions() {
 		KPSSetOptionRequest_t * setOptionReq = NULL;
 		asn_dec_rval_t dr =	ber_decode(0, &asn_DEF_KPSSetOptionRequest, (void**)&setOptionReq, packet + 4, packet_len - 4);
 		assert(dr.code == RC_OK);
-
-		fprintf(stderr, "\rKyotoPortServer::ReadKPSOptions() successfully decoded SetOptionReq\n");
 
 		long iOptCode = 0;
 		asn_INTEGER2long(&setOptionReq->optCode, &iOptCode);
@@ -82,15 +81,19 @@ int KyotoPortServer::ReadKPSOptions() {
 				asn_INTEGER2long( setOptionReq->optValueInteger, &iThrPoolSize);
 
 				_Options.ThreadPoolSize = iThrPoolSize;
-				fprintf(stderr, "\rKyotoPortServer::ReadKPSOptions() ThreadPoolSize = %d\n", iThrPoolSize);
+				fprintf(dbgout, "\rKyotoPortServer::ReadKPSOptions() ThreadPoolSize = %d\n", iThrPoolSize);
 				break;
 			}
+			case opt_DebugLogFile:
+				freopen((char*)setOptionReq->optValueString->buf, "a", dbgout);
+				fprintf(dbgout, "\rKyotoPortServer::ReadKPSOptions() redirecting stderr to '%s'\n", setOptionReq->optValueString->buf);
+				break;
 			case opt_EndOfOptions:
-				fprintf(stderr, "\rKyotoPortServer::ReadKPSOptions() end of options reached\n");
+				fprintf(dbgout, "\rKyotoPortServer::ReadKPSOptions() end of options reached\n");
 				keep_reading = false;
 				break;
 			default:
-				fprintf(stderr, "\rKyotoPortServer::ReadKPSOptions() Unknown optCode: %d\n", iOptCode);
+				fprintf(dbgout, "\rKyotoPortServer::ReadKPSOptions() Unknown optCode: %d\n", iOptCode);
 				return 1;
 		}
 		
@@ -124,8 +127,6 @@ int KyotoPortServer::RecvLoop() {
 }
 
 int KyotoPortServer::Run() {
-	fprintf(stderr, "\rKyotoPortServer::start()\n");
-
 	assert( ReadKPSOptions() == 0 );
 	assert( InitThreadPool() == 0 );
 

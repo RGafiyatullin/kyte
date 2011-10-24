@@ -26,7 +26,8 @@ typedef struct KPSOptions_s {
 
 enum KPSOptions {
 	opt_EndOfOptions = 0,
-	opt_ThreadPoolSize = 1
+	opt_ThreadPoolSize = 1,
+	opt_DebugLogFile = 2
 };
 
 class KPSResponse;
