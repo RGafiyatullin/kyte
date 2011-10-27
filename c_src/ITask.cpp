@@ -3,11 +3,16 @@
 #ifndef WIN32
 	#include <unistd.h>
 #endif
+
+#include <kps.h>
+
 namespace RG {
 	ITask::ITask() : _Name(NULL) {
 		SetName("unnamed");
+		//fprintf(dbgout, "ITask CREATE %p\n", this);
 	}
 	ITask::~ITask() {
+		//fprintf(dbgout, "ITask DELETE %p\n", this);
 		delete [] _Name;
 	}
 	void ITask::Run() {}

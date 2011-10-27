@@ -31,12 +31,15 @@ enum PDUTypes {
 };
 
 KPSResponse::KPSResponse(KyotoPortServer* kps, byte* packet, int packet_len) :
-	ITask(),
+	// ITask(),
 	_KPS(kps),
 	_Packet(packet),
 	_PacketLen(packet_len)
-{}
+{
+	//fprintf(dbgout, "KPSResponse CREATE %p\n", dynamic_cast<ITask*>(this));
+}
 KPSResponse::~KPSResponse() {
+	//fprintf(dbgout, "KPSResponse DELETE %p\n", dynamic_cast<ITask*>(this));
 	_KPS = NULL;
 	delete [] _Packet;
 	_PacketLen = 0;
@@ -54,12 +57,15 @@ bool KPSResponse::ToBeDisposedByWorker() const {
 
 
 KPSTask::KPSTask(KyotoPortServer* kps, byte* packet, int packet_len) : 
-	ITask(),
+	// ITask(),
 	_KPS(kps),
 	_Packet(packet),
 	_PacketLen(packet_len)
-{}
+{
+	//fprintf(dbgout, "KPSTask CREATE %p\n", dynamic_cast<ITask*>(this));
+}
 KPSTask::~KPSTask() {
+	//fprintf(dbgout, "KPSTask DELETE %p\n", dynamic_cast<ITask*>(this));
 	_KPS->free_packet(_Packet);
 	_Packet = NULL;
 	_PacketLen = -1;
@@ -102,6 +108,26 @@ done > ./auto.cpp
 			process_ ## R (req); \
 			asn_DEF_ ## R.free_struct(&asn_DEF_ ## R , req, 0); \
 		}; break;
+	
+// Valgrind: 
+/*
+==31405== Invalid read of size 8
+==31405==    at 0x2470D1: memcpy$VARIANT$sse3x (in /usr/lib/system/libsystem_c.dylib)
+==31405==    by 0x100111E2F: __inline_memcpy_chk (in ../c_src/kyoto-port-server)
+==31405==    by 0x10011197F: OCTET_STRING_decode_ber (in ../c_src/kyoto-port-server)
+==31405==    by 0x100119A57: SEQUENCE_decode_ber (in ../c_src/kyoto-port-server)
+==31405==    by 0x100116BE4: ber_decode (in ../c_src/kyoto-port-server)
+==31405==    by 0x1000022B9: KPSTask::Run() (in ../c_src/kyoto-port-server)
+==31405==    by 0x1001085A9: KyotoPortServer::RecvLoop() (in ../c_src/kyoto-port-server)
+==31405==    by 0x100108AF9: KyotoPortServer::Run() (in ../c_src/kyoto-port-server)
+==31405==    by 0x100127EB6: main (in ../c_src/kyoto-port-server)
+==31405==  Address 0x10078ccd0 is 160 bytes inside a block of size 163 alloc'd
+==31405==    at 0xE858: operator new[](unsigned long) (vg_replace_malloc.c:305)
+==31405==    by 0x10010932E: PortServer::recv_packet(unsigned char**) (in ../c_src/kyoto-port-server)
+==31405==    by 0x10010850C: KyotoPortServer::RecvLoop() (in ../c_src/kyoto-port-server)
+==31405==    by 0x100108AF9: KyotoPortServer::Run() (in ../c_src/kyoto-port-server)
+==31405==    by 0x100127EB6: main (in ../c_src/kyoto-port-server)
+*/
 
 	switch (pdu_type) {
 		CASE_REQ_TYPE(KPSBasicRequest)
@@ -147,7 +173,7 @@ void KPSTask::process_KPSDbOpenRequest(const KPSDbOpenRequest_t * req) {
 
 	assert( asn_long2INTEGER(&rc, 0) == 0 );
 	assert( asn_long2INTEGER(&dbHandle, 0) == 0 );
-	assert( OCTET_STRING_fromBuf(&errorDescription, "", -1) == 0 );
+	assert( OCTET_STRING_fromBuf(&errorDescription, "", -1) == 0 ); // Valgrind: Invalid read of size 8
 
 	response.dbHandle = NULL;
 	response.errorDescription = NULL;
@@ -242,7 +268,7 @@ void KPSTask::process_KPSDbClearRequest(const KPSDbClearRequest_t * req) {
 	asn_enc_rval_t er = der_encode_to_buffer(&asn_DEF_KPSDbClearResponse, (void*)&response, buffer + 4, ENC_BUFF_SIZE - 4);
 
 	assert(er.encoded != -1);
-	_KPS->Respond(new KPSResponse(_KPS, buffer, er.encoded + 4));
+	_KPS->Respond( new KPSResponse(_KPS, buffer, er.encoded + 4) );
 
 }
 void KPSTask::process_KPSDbCountRequest(const KPSDbCountRequest_t * req) {
@@ -350,7 +376,7 @@ void KPSTask::process_KPSDbSetRequest(const KPSDbSetRequest_t * req) {
 	
 	assert(er.encoded != -1);
 
-	asn_DEF_KPSDbSetResponse.free_struct(&asn_DEF_KPSDbSetResponse, (void*)&response, 1);
+	//asn_DEF_KPSDbSetResponse.free_struct(&asn_DEF_KPSDbSetResponse, (void*)&response, 0);
 
 	_KPS->Respond(new KPSResponse(_KPS, buffer, er.encoded + 4));
 }

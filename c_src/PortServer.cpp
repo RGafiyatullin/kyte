@@ -33,8 +33,9 @@ PortServer::~PortServer() {}
 int PortServer::port_read_exact(byte* buff, int len) {
 	ssize_t i, got=0 ;
 	do {
-		i = read( _Input, buff + got, len - got);
-		check_io_failure();
+		i = read( _Input, buff + got, len - got );
+		assert( i >= 0 );
+		//check_io_failure();
 		if (i <= 0 ) {
 			return i;
 		}
@@ -72,22 +73,22 @@ void PortServer::send_packet(const byte* packet, int len) {
 	uint32_t netLongPL = htonl(len);
 	byte* pl_bytes = (byte*) &netLongPL;
 
-	port_write_exact(pl_bytes, ERL_PACKET_LENGTH);
-	port_write_exact(packet, len);
+	assert( port_write_exact(pl_bytes, ERL_PACKET_LENGTH) == ERL_PACKET_LENGTH );
+	assert( port_write_exact(packet, len) == len );
 }
 int  PortServer::recv_packet(byte** pPacket) {
 	if ( *pPacket ) { // do not want to leak this buffer
 		return -1;
 	}
-
+	int bytes_actually_read = 0;
 	byte pl_bytes[ERL_PACKET_LENGTH];
-	port_read_exact(pl_bytes, ERL_PACKET_LENGTH);
+	assert( port_read_exact(pl_bytes, ERL_PACKET_LENGTH) == ERL_PACKET_LENGTH );
 	
 	uint32_t netLongPL  = * ((uint32_t *)pl_bytes);
 	uint32_t hostLongPL = ntohl(netLongPL);
 
 	byte* packet_buff = new byte[hostLongPL];
-	port_read_exact(packet_buff, hostLongPL);
+	assert( port_read_exact(packet_buff, hostLongPL) == hostLongPL );
 
 	*pPacket = packet_buff;
 	return hostLongPL;

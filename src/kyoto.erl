@@ -44,7 +44,9 @@ start_server(Opts) ->
 	{ok, Server}.
 
 stop_server(Pid) ->
-	supervisor:delete_child(Pid).
+	supervisor:terminate_child(kc_port_srv_sup, Pid),
+	supervisor:delete_child(kc_port_srv_sup, Pid).
+
 
 %%%
 -spec open(Server :: pid(), FileName :: string()) -> {ok, db_handle()} | {error, any()}.

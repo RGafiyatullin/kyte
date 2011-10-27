@@ -62,6 +62,7 @@ handle_cast(Request, State = #state{}) ->
 	{stop, {bad_arg, Request}, State}.
 
 handle_info({Port, {data, Data}}, State = #state{ port = Port, replies = Replies }) ->
+	%io:format("<<< ~p~n", [list_to_binary(Data)]),
 	<<PDUT:16/little, CommandId:16/little, Encoded/binary>> = list_to_binary(Data),
 	{ok, Reply} = handle_response_pdu(PDUT, Encoded),
 	ReplyTo = dict:fetch(CommandId, Replies),
@@ -101,9 +102,11 @@ start_port_server(Params) ->
 	_Port = open_port({spawn, PortServerBin}, [{packet, ?kps_command_size_length}, exit_status]).
 
 send_packet(Port, Packet) ->
+	% io:format(">>> ~p~n", [Packet]),
 	Port ! {self(), {command, Packet}}.
 
 send_nil_packet(Port) ->
+	% io:format(">>> ~p~n", [<<>>]),
 	send_packet(Port, <<>>).
 
 init_port_server_base(Port, _Params) ->

@@ -25,6 +25,14 @@ t4() ->
 	{ok, Db} = t3(),
 	kyoto:close(Db).
 
+t5() ->
+	kyoto:start(),
+	{ok, Srv} = kyoto:start_server([
+		{port_server_binary, "valgrind --leak-check=yes --log-file=./valgrind.log ../c_src/kyoto-port-server"},
+		{debug_log_file, "./test.log"}
+	]),
+	Handle = kyoto:open(Srv, "test.kch").
+	
 
 gen_kv_set(Size) ->
 	generate_kv_set_internal(Size, 0, []).

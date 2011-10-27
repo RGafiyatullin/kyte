@@ -67,7 +67,6 @@ int KyotoPortServer::ReadKPSOptions() {
 		assert(pdu_type == 2);
 		assert(command_id != -1);
 
-
 		KPSSetOptionRequest_t * setOptionReq = NULL;
 		asn_dec_rval_t dr =	ber_decode(0, &asn_DEF_KPSSetOptionRequest, (void**)&setOptionReq, packet + 4, packet_len - 4);
 		assert(dr.code == RC_OK);
@@ -107,8 +106,10 @@ int KyotoPortServer::ReadKPSOptions() {
 }
 
 int KyotoPortServer::InitThreadPool() {
+#ifndef NO_QUEUES
 	_RequestQueue = new RG::TaskQueue(_Options.ThreadPoolSize);
 	_ResponseQueue = new RG::TaskQueue(1);
+#endif // NO_QUEUES
 	return 0;
 }
 
@@ -120,7 +121,14 @@ int KyotoPortServer::RecvLoop() {
 		assert(packet_len != -1);
 
 		KPSTask* task = new KPSTask(this, packet, packet_len);
+
+#ifndef NO_QUEUES
 		_RequestQueue->AddTask(task);
+#else
+		task->Run();
+		assert( task->ToBeDisposedByWorker() == true );
+		delete task;
+#endif // NO_QUEUES
 
 	} while (keep_running);
 	return 0;
@@ -134,6 +142,12 @@ int KyotoPortServer::Run() {
 }
 
 void KyotoPortServer::Respond(KPSResponse * responseTask) {
+#ifndef NO_QUEUES
 	_ResponseQueue->AddTask(responseTask);
+#else
+	responseTask->Run();
+	assert( responseTask->ToBeDisposedByWorker() == true );
+	delete responseTask;
+#endif // NO_QUEUES
 }
 

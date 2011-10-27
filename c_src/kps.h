@@ -4,6 +4,10 @@
 
 // #define dbgout stderr
 
+#include <stdio.h>
+
 #define dbgout stderr
+
+//#define NO_QUEUES
 
 #endif // _kps_h
