@@ -2,16 +2,12 @@
 #ifndef _RG_TaskQueue_h
 #define _RG_TaskQueue_h
 
-#ifdef WIN32
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
 
-#else
-	#include <stdio.h>
-	#include <unistd.h>
-	#include <stdlib.h>
-#endif
-
-#include <Mutex.h>
-#include <Monitor.h>
+#include "Mutex.h"
+#include "Monitor.h"
 
 namespace RG {
 	class ITask;

@@ -1,15 +1,12 @@
-#include "StdAfx.h"
-
-#include <TaskQueue.h>
-#include <ITask.h>
-#include <Worker.h>
-#include <Thread.h>
+#include "TaskQueue.h"
+#include "ITask.h"
+#include "Worker.h"
+#include "Thread.h"
 
 
 namespace RG {
 	TaskQueue::TaskQueue(int workersCount) : _Head(NULL), _Tail(NULL), _WorkersCount(workersCount)  {
 		Lock l(_Lock);
-		printf("Initializing TaskQueue with %i workers\n", workersCount);
 		_Workers = new Worker*[workersCount];
 		_Threads = new Thread*[workersCount];
 		for (int i = 0; i < workersCount; i++) {

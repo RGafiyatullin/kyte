@@ -1,75 +1,57 @@
+ERL_INCLUDE = /opt/otp-r14b04-x86_64-full-word/lib/erlang/usr/include
 KYOTO_I = /opt/kyoto/include
 KYOTO_A = /opt/kyoto/lib/libkyotocabinet.a
-KPSASN_A = ../asn1/kpsasn1.a
 
-ERLC = erlc
-ASN1C = asn1c
 CXX = g++ -c
 LD = g++
-CXX_FLAGS = -I. -I$(KYOTO_I) -I../asn1
-LD_FLAGS = -lz
-ASN1SRCS = 
-OBJECTS = KPSTask.o Worker.o TaskQueue.o Monitor.o Thread.o ITask.o Mutex.o KyotoPortServer.o PortServer.o
+CXX_FLAGS = -I. -I$(KYOTO_I) -I$(ERL_INCLUDE) -fPIC -Wall
+LD_FLAGS = -lz -fPIC -shared -lstdc++
+OBJECTS = \
+			Worker.o \
+			TaskQueue.o \
+			Monitor.o \
+			Thread.o \
+			ITask.o \
+			Mutex.o \
+			\
+			kyoto_client.o
 
-OUT_FILE = kyoto-port-server
+OUT_FILE = libkyoto.so
 RM_F = rm -f
+
+CXXF = $(CXX) $(CXX_FLAGS)
 
 all: $(OUT_FILE)
 
-$(OUT_FILE): $(OBJECTS) $(KPSASN_A) $(KYOTO_A) main.o
-	$(LD) -o $(OUT_FILE) $(LD_FLAGS) $(OBJECTS) $(KPSASN_A) $(KYOTO_A) main.o
-
-$(KPSASN_A):
-	${MAKE} -C ../asn1
-
-port-clean:
-	${MAKE} -C ../asn1 clean
-	$(RM_F) $(OBJECTS)
-	$(RM_F) main.o
-	$(RM_F) test.o
-	$(RM_F) test
-
+$(OUT_FILE): $(OBJECTS) $(KYOTO_A)
+	$(LD) -o $(OUT_FILE) $(LD_FLAGS) $(OBJECTS) $(KYOTO_A)
 
 clean:
-	${MAKE} -C ../asn1 clean
 	$(RM_F) $(OBJECTS)
-	$(RM_F) main.o
 	$(RM_F) $(OUT_FILE)
-	$(RM_F) test.o
-	$(RM_F) test
 
-KPSTask.o: KPSTask.cpp KPSTask.h ITask.h $(KPSASN_A) kps.h
-	$(CXX) $(CXX_FLAGS) KPSTask.cpp
 
-Worker.o: Worker.cpp Worker.h TaskQueue.h kps.h
-	$(CXX) $(CXX_FLAGS) Worker.cpp
+################################################################################
 
-TaskQueue.o: TaskQueue.cpp TaskQueue.h ITask.h Worker.h Thread.h kps.h
-	$(CXX) $(CXX_FLAGS) TaskQueue.cpp
+kyoto_client.o: kyoto_client.cpp kyoto_client.h
+	$(CXXF) kyoto_client.cpp
 
-Monitor.o: Mutex.h Monitor.h Monitor.cpp kps.h
-	$(CXX) $(CXX_FLAGS) Monitor.cpp
 
-Thread.o: Thread.cpp Thread.h ITask.h kps.h
-	$(CXX) $(CXX_FLAGS) Thread.cpp
 
-ITask.o: ITask.cpp ITask.h kps.h
-	$(CXX) $(CXX_FLAGS) ITask.cpp
+Worker.o: Worker.cpp Worker.h TaskQueue.h
+	$(CXXF) Worker.cpp
 
-Mutex.o: Mutex.cpp Mutex.h kps.h
-	$(CXX) $(CXX_FLAGS) Mutex.cpp
+TaskQueue.o: TaskQueue.cpp TaskQueue.h ITask.h Worker.h Thread.h
+	$(CXXF) TaskQueue.cpp
 
-PortServer.o: PortServer.cpp PortServer.h kps.h
-	$(CXX) $(CXX_FLAGS) PortServer.cpp
+Monitor.o: Mutex.h Monitor.h Monitor.cpp
+	$(CXXF) Monitor.cpp
 
-KyotoPortServer.o: $(KPSASN_A) PortServer.o KyotoPortServer.cpp KyotoPortServer.h kps.h
-	$(CXX) $(CXX_FLAGS) KyotoPortServer.cpp
+Thread.o: Thread.cpp Thread.h ITask.h
+	$(CXXF) Thread.cpp
 
-main.o: KyotoPortServer.h main.cpp kps.h
-	$(CXX) $(CXX_FLAGS) main.cpp
+ITask.o: ITask.cpp ITask.h
+	$(CXXF) ITask.cpp
 
-test.o: test.cpp kps.h
-	$(CXX) $(CXX_FLAGS) test.cpp
-
-test: test.o $(OBJECTS) $(KYOTO_A) $(KPSASN_A) kps.h
-	$(LD) -o test $(LD_FLAGS) $(OBJECTS) $(KPSASN_A) $(KYOTO_A) test.o
+Mutex.o: Mutex.cpp Mutex.h
+	$(CXXF) Mutex.cpp

@@ -2,7 +2,7 @@
 #ifndef _RG_Worker_h
 #define _RG_Worker_h
 
-#include <ITask.h>
+#include "ITask.h"
 
 namespace RG {
 	class TaskQueue;
