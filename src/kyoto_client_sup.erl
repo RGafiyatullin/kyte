@@ -25,7 +25,6 @@ start_link() ->
 
 init([]) ->
     {ok, { {one_for_one, 5, 10}, [
-    	{seq_srv, {kc_seq_srv, start_link, []}, permanent, 5000, worker, [kc_seq_srv]},
-    	{port_srv_sup, {kc_port_srv_sup, start_link, []}, permanent, infinity, supervisor, [kc_port_srv_sup]}
+    	{seq_srv, {kc_seq_srv, start_link, []}, permanent, 5000, worker, [kc_seq_srv]}
     ]} }.
 
