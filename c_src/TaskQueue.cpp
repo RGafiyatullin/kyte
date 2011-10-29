@@ -5,7 +5,7 @@
 
 
 namespace RG {
-	TaskQueue::TaskQueue(int workersCount) : _Head(NULL), _Tail(NULL), _WorkersCount(workersCount)  {
+	TaskQueue::TaskQueue(int workersCount) : _Head(NULL), _Tail(NULL), _WorkersCount(workersCount), _Shutdown(false) {
 		Lock l(_Lock);
 		_Workers = new Worker*[workersCount];
 		_Threads = new Thread*[workersCount];
@@ -16,7 +16,16 @@ namespace RG {
 			_Threads[i]->Start();
 		}
 	}
-	TaskQueue::~TaskQueue() {}
+	TaskQueue::~TaskQueue() {
+		for (int i = 0; i < _WorkersCount; i++) {
+			delete _Threads[i];
+			_Threads[i] = NULL;
+			delete _Workers[i];
+			_Workers[i] = NULL;
+		}
+		delete [] _Threads;
+		delete [] _Workers;
+	}
 	
 	void TaskQueue::AddTask(ITask* task) {
 		Lock l(_Lock);
@@ -51,7 +60,20 @@ namespace RG {
 				
 				return task;
 			}
+			if (_Shutdown) {
+				return NULL;
+			}
 			_Monitor.Wait(_Lock);
+		}
+	}
+	void TaskQueue::Shutdown() {
+		_Shutdown = true;
+		for (int i = 0; i < _WorkersCount; i++) {
+			_Workers[i]->Shutdown();
+		}
+		_Monitor.PulseAll();
+		for (int i = 0; i < _WorkersCount; i++) {
+			_Threads[i]->Join();
 		}
 	}
 }

@@ -15,6 +15,7 @@ namespace RG {
 
 		void Wait(Mutex& m);
 		void Pulse();
+		void PulseAll();
 	};
 }
 

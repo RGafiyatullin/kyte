@@ -8,9 +8,22 @@
 
 #include "NifAsyncTask.h"
 #include "DbOpenTask.h"
+#include "DbCloseTask.h"
 
 extern "C" {
 	#include <erl_nif.h>
+
+	#define CHECK_THR_POOL(Idx) \
+		if ( TaskQueues[Idx] == NULL ) { \
+			return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, "bad_pool_idx")); \
+		}
+	#define STD_TASK_BEGIN(TaskType) \
+		RG::TaskQueue* tq = TaskQueues[thrPoolIdx]; \
+		kyoto_client::TaskType* task = new kyoto_client::TaskType; \
+		task->SetOpenDBs( OpenDatabases[thrPoolIdx] ); \
+		task->SetReplyTo( argv[0], argv[1] );
+	#define STD_TASK_END() \
+		tq->AddTask(task);	
 
 	static RG::TaskQueue* TaskQueues[MAX_THR_POOLS];
 
@@ -41,52 +54,79 @@ extern "C" {
 		else {
 			return enif_make_tuple2(env, enif_make_atom(env, "ok"), enif_make_int(env, poolPos));
 		}
-		/*
-		for (int i = 0; i < MAX_THR_POOLS; i++) {
-			if ( TaskQueues[i] == NULL ) {
-				RG::TaskQueue* tq = new RG::TaskQueue(thrCnt);
-				TaskQueues[i] = tq;
-				return enif_make_tuple2(env, enif_make_atom(env, "ok"), enif_make_int(env, i));
+	}
+	static ERL_NIF_TERM kc_destroy_thr_pool(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+	{
+		assert( argc == 1 );
+		int poolIdx;
+		assert( enif_get_int(env, argv[0], &poolIdx) == true );
+
+		RG::TaskQueue* tq = TaskQueues[poolIdx];
+		PolyDB** openDBs = OpenDatabases[poolIdx];
+		for (int i = 0; i < MAX_OPEN_DBS; i++) {
+			if ( openDBs[i] != NULL ) {
+				openDBs[i]->close();
+				delete openDBs[i];
+				openDBs[i] = NULL;
 			}
 		}
-		
-		return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, "busy"));
-		*/
+		tq->Shutdown();
+		delete tq;
+		TaskQueues[poolIdx] = NULL;
+
+		return enif_make_atom(env, "ok");
 	}
 
 	static ERL_NIF_TERM kc_db_open(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 	{
 		assert( argc == 4 );
+		assert( enif_is_pid(env, argv[0]) == true );
+		assert( enif_is_ref(env, argv[1]) == true );
+
 		int thrPoolIdx;
 		char pathToDb[ MAX_PATH_LEN + 1 ];
-		assert( enif_get_int(env, argv[0], &thrPoolIdx) == true );
+		assert( enif_get_int(env, argv[2], &thrPoolIdx) == true );
 		assert( thrPoolIdx >= 0 && thrPoolIdx < MAX_THR_POOLS );
-		assert( enif_get_string(env, argv[1], pathToDb, MAX_PATH_LEN, ERL_NIF_LATIN1) > 0 );
+		assert( enif_get_string(env, argv[3], pathToDb, MAX_PATH_LEN, ERL_NIF_LATIN1) > 0 );
+		
+		CHECK_THR_POOL(thrPoolIdx);
+		STD_TASK_BEGIN(DbOpenTask);
 
-		assert( enif_is_pid(env, argv[2]) == true );
-		assert( enif_is_ref(env, argv[3]) == true );
-
-		if ( TaskQueues[thrPoolIdx] == NULL ) {
-			return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, "bad_pool_idx"));
-		}
-
-		RG::TaskQueue* tq = TaskQueues[thrPoolIdx];
-
-		kyoto_client::DbOpenTask* task = new kyoto_client::DbOpenTask;
-		task->SetOpenDBs( OpenDatabases[thrPoolIdx] );
-		task->SetReplyTo(argv[2], argv[3]);
 		task->SetDbFile(pathToDb);
 
-		tq->AddTask(task);
+		STD_TASK_END();
+		return enif_make_atom(env, "ok");
+	}
 
+	static ERL_NIF_TERM kc_db_close(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+	{
+		assert( argc == 4 );
+		assert( enif_is_pid(env, argv[0]) == true );
+		assert( enif_is_ref(env, argv[1]) == true );
+
+		int thrPoolIdx;
+		int dbIdx;
+		assert( enif_get_int(env, argv[2], &thrPoolIdx) == true );
+		assert( enif_get_int(env, argv[3], &dbIdx) == true );
+		
+		CHECK_THR_POOL(thrPoolIdx);
+		STD_TASK_BEGIN(DbCloseTask);
+
+		task->SetDbIdx(dbIdx);
+
+		STD_TASK_END()
 		return enif_make_atom(env, "ok");
 	}
 
 	static ErlNifFunc nif_funcs[] =
 	{
 		{"init_nif", 0, kc_init_nif},
+		
 		{"create_thr_pool", 1, kc_create_thr_pool},
-		{"db_open", 4, kc_db_open}
+		{"destroy_thr_pool", 1, kc_destroy_thr_pool},
+
+		{"db_open", 4, kc_db_open},
+		{"db_close", 4, kc_db_close}
 	};
 
 	ERL_NIF_INIT(kyoto_nifs,nif_funcs,NULL,NULL,NULL,NULL)

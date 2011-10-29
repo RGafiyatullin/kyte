@@ -17,6 +17,7 @@ namespace RG {
 		virtual ~Worker();
 		
 		void Run();
+		void Shutdown();
 	};
 }
 

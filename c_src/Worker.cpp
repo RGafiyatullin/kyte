@@ -15,11 +15,15 @@ namespace RG {
 	void Worker::Run() {
 		while (!_Shutdown) {
 			ITask* currentJob = _Q->FetchTask();
-			assert(currentJob != NULL);
-			currentJob->Run();
-			if (currentJob->ToBeDisposedByWorker()) {
-				delete currentJob;
+			if (currentJob != NULL) {
+				currentJob->Run();
+				if (currentJob->ToBeDisposedByWorker()) {
+					delete currentJob;
+				}
 			}
 		}
+	}
+	void Worker::Shutdown() {
+		_Shutdown = true;
 	}
 }

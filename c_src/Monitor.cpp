@@ -16,5 +16,8 @@ namespace RG {
 	void Monitor::Pulse() {
 		pthread_cond_signal(&_CV);
 	}
+	void Monitor::PulseAll() {
+		pthread_cond_broadcast(&_CV);
+	}
 
 }

@@ -31,12 +31,15 @@ namespace RG {
 		
 		Mutex _Lock;
 		Monitor _Monitor;
+		bool _Shutdown;
 	public:
 		TaskQueue(int workersCount) ;
 		virtual ~TaskQueue();
 		
 		void AddTask(ITask* task);
 		ITask* FetchTask();
+
+		void Shutdown();
 	};
 }
 
