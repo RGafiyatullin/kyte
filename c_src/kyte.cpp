@@ -205,7 +205,7 @@ extern "C" {
 		{"db_remove", 5, kc_db_remove}
 	};
 
-	ERL_NIF_INIT( kyte,
+	ERL_NIF_INIT( kyte_nifs,
 				nif_funcs,
 				NULL, NULL,
 				NULL,NULL )
