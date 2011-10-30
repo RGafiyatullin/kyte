@@ -60,10 +60,10 @@ namespace RG {
 				
 				return task;
 			}
+			_Monitor.Wait(_Lock);
 			if (_Shutdown) {
 				return NULL;
 			}
-			_Monitor.Wait(_Lock);
 		}
 	}
 	void TaskQueue::Shutdown() {
@@ -74,6 +74,17 @@ namespace RG {
 		_Monitor.PulseAll();
 		for (int i = 0; i < _WorkersCount; i++) {
 			_Threads[i]->Join();
+		}
+		QueueLink* lnk = _Head;
+		while (lnk) {
+			QueueLink* toDelete = lnk;
+			lnk = lnk->Next;
+			
+			ITask* task = lnk->Data;
+			if ( task->ToBeDisposedByWorker() ) {
+				delete task;
+			}
+			delete lnk;
 		}
 	}
 }

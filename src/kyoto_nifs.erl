@@ -7,7 +7,11 @@
 	destroy_thr_pool/1,
 
 	db_open/4,
-	db_close/4
+	db_close/4,
+
+	db_set/6,
+	db_get/5,
+	db_remove/5
 ]).
 
 load_nif() ->
@@ -40,3 +44,27 @@ create_thr_pool(_) -> {error, nif_not_loaded}.
 
 -spec destroy_thr_pool(PoolIdx :: integer()) -> ok | {error, any()}.
 destroy_thr_pool(_) -> {error, nif_not_loaded}.
+
+-spec db_set(
+			ReplyPid :: pid(), ReplyRef :: reference(),
+			PoolIdx :: integer(), DbIdx :: integer(), 
+			Key :: binary(), Value :: binary()
+		) -> ok | {error, any()}.
+db_set(_,_,_,_,_,_) ->
+	{error, nif_not_loaded}.
+
+-spec db_get(
+		ReplyPid :: pid(), ReplyRef :: reference(),
+		PoolIdx :: integer(), DbIdx :: integer(),
+		Key :: binary()
+	) -> ok | {error, any()}.
+db_get(_,_,_,_,_) ->
+	{error, nif_not_loaded}.
+
+-spec db_remove(
+		ReplyPid :: pid(), ReplyRef :: reference(),
+		PoolIdx :: integer(), DbIdx :: integer(),
+		Key :: binary()
+	) -> ok | {error, any()}.
+db_remove(_,_,_,_,_) ->
+	{error, nif_not_loaded}.

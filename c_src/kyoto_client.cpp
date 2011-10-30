@@ -9,6 +9,9 @@
 #include "NifAsyncTask.h"
 #include "DbOpenTask.h"
 #include "DbCloseTask.h"
+#include "DbSetTask.h"
+#include "DbGetTask.h"
+#include "DbRemoveTask.h"
 
 extern "C" {
 	#include <erl_nif.h>
@@ -35,6 +38,9 @@ extern "C" {
 		for (int i = 0; i < MAX_THR_POOLS; i++) {
 			TaskQueues[i] = NULL;
 			OpenDatabases[i] = new PolyDB * [MAX_OPEN_DBS];
+			for (int j = 0; j < MAX_OPEN_DBS; j++) {
+				OpenDatabases[i][j] = NULL;
+			}
 		}
 		return enif_make_atom(env, "ok");
 	}
@@ -60,7 +66,9 @@ extern "C" {
 		assert( argc == 1 );
 		int poolIdx;
 		assert( enif_get_int(env, argv[0], &poolIdx) == true );
-
+		
+		CHECK_THR_POOL(poolIdx);
+		
 		RG::TaskQueue* tq = TaskQueues[poolIdx];
 		PolyDB** openDBs = OpenDatabases[poolIdx];
 		for (int i = 0; i < MAX_OPEN_DBS; i++) {
@@ -114,11 +122,73 @@ extern "C" {
 
 		task->SetDbIdx(dbIdx);
 
-		STD_TASK_END()
+		STD_TASK_END();
 		return enif_make_atom(env, "ok");
 	}
 
-	
+	static ERL_NIF_TERM kc_db_set(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+	{
+		assert( argc == 6 );
+		assert( enif_is_pid(env, argv[0]) == true );
+		assert( enif_is_ref(env, argv[1]) == true );
+
+		int thrPoolIdx;
+		int dbIdx;
+		assert( enif_get_int(env, argv[2], &thrPoolIdx) == true );
+		assert( enif_get_int(env, argv[3], &dbIdx) == true );
+
+		CHECK_THR_POOL(thrPoolIdx);
+		STD_TASK_BEGIN(DbSetTask);
+
+		task->SetDbIdx(dbIdx);
+		task->SetKey(argv[4]);
+		task->SetValue(argv[5]);
+
+		STD_TASK_END();
+		return enif_make_atom(env, "ok");
+	}
+
+	static ERL_NIF_TERM kc_db_get(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+	{
+		assert( argc == 5 );
+		assert( enif_is_pid(env, argv[0]) == true );
+		assert( enif_is_ref(env, argv[1]) == true );
+
+		int thrPoolIdx;
+		int dbIdx;
+		assert( enif_get_int(env, argv[2], &thrPoolIdx) == true );
+		assert( enif_get_int(env, argv[3], &dbIdx) == true );
+
+		CHECK_THR_POOL(thrPoolIdx);
+		STD_TASK_BEGIN(DbGetTask);
+
+		task->SetDbIdx(dbIdx);
+		task->SetKey(argv[4]);
+
+		STD_TASK_END();
+		return enif_make_atom(env, "ok");
+	}
+
+	static ERL_NIF_TERM kc_db_remove(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+	{
+		assert( argc == 5 );
+		assert( enif_is_pid(env, argv[0]) == true );
+		assert( enif_is_ref(env, argv[1]) == true );
+
+		int thrPoolIdx;
+		int dbIdx;
+		assert( enif_get_int(env, argv[2], &thrPoolIdx) == true );
+		assert( enif_get_int(env, argv[3], &dbIdx) == true );
+
+		CHECK_THR_POOL(thrPoolIdx);
+		STD_TASK_BEGIN(DbRemoveTask);
+
+		task->SetDbIdx(dbIdx);
+		task->SetKey(argv[4]);
+
+		STD_TASK_END();
+		return enif_make_atom(env, "ok");
+	}
 
 	static ErlNifFunc nif_funcs[] =
 	{
@@ -128,7 +198,11 @@ extern "C" {
 		{"destroy_thr_pool", 1, kc_destroy_thr_pool},
 
 		{"db_open", 4, kc_db_open},
-		{"db_close", 4, kc_db_close}
+		{"db_close", 4, kc_db_close},
+
+		{"db_set", 6, kc_db_set},
+		{"db_get", 5, kc_db_get},
+		{"db_remove", 5, kc_db_remove}
 	};
 
 	ERL_NIF_INIT(kyoto_nifs,nif_funcs,NULL,NULL,NULL,NULL)
