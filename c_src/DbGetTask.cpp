@@ -1,6 +1,6 @@
 #include "DbGetTask.h"
 
-namespace kyoto_client {
+namespace kyte {
 	DbGetTask::DbGetTask() {}
 	DbGetTask::~DbGetTask() {}
 	void DbGetTask::Run() {

@@ -1,6 +1,6 @@
 #include "DbRemoveTask.h"
 
-namespace kyoto_client {
+namespace kyte {
 	DbRemoveTask::DbRemoveTask() {}
 	DbRemoveTask::~DbRemoveTask() {}
 	void DbRemoveTask::Run() {

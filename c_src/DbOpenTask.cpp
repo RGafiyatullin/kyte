@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-namespace kyoto_client {
+namespace kyte {
 	using kyotocabinet::PolyDB;
 
 	DbOpenTask::DbOpenTask() {

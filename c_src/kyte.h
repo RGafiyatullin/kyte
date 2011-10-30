@@ -1,5 +1,5 @@
-#ifndef _kyoto_client_h
-#define _kyoto_client_h
+#ifndef _kyte_h
+#define _kyte_h
 
 #include <unistd.h>
 #include <stdio.h>
@@ -24,4 +24,4 @@ static int place_to_the_pool(El_t* item, El_t** pool, int poolSize) {
 }
 
 
-#endif // _kyoto_client_h
+#endif // _kyte_h

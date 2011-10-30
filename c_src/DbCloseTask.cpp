@@ -1,6 +1,6 @@
 #include "DbCloseTask.h"
 
-namespace kyoto_client {
+namespace kyte {
 	using kyotocabinet::PolyDB;
 
 	DbCloseTask::DbCloseTask() {}

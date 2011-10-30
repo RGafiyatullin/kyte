@@ -1,6 +1,6 @@
 #include "NifAsyncTask.h"
 
-namespace kyoto_client {
+namespace kyte {
 	NifAsyncTask::NifAsyncTask() : _ErlEnv(NULL) {
 		_ErlEnv = enif_alloc_env();
 	}

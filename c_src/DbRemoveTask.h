@@ -1,10 +1,10 @@
 #ifndef _DbRemoveTask_h
 #define _DbRemoveTask_h
 
-#include "kyoto_client.h"
+#include "kyte.h"
 #include "DbGenericTask.h"
 
-namespace kyoto_client {
+namespace kyte {
 	class DbRemoveTask : public DbGenericTask {
 	private:
 		ERL_NIF_TERM _Key;

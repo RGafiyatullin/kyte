@@ -1,4 +1,4 @@
--module(kyoto_nifs).
+-module(kyte_nifs).
 
 -on_load(load_nif/0).
 
@@ -16,12 +16,10 @@
 
 load_nif() ->
 	PrivD = code:priv_dir(kyoto_client),
-	NifF = "kyoto_nifs",
+	NifF = "kyte",
 	NifPath = filename:join(PrivD, NifF),
-	io:format("loading ~p~n", [NifPath]),
-	Result = erlang:load_nif(NifPath, 0),
-	io:format("load_nif result: ~p~n", [Result]),
-
+	ok = erlang:load_nif(NifPath, 0),
+	
 	init_nif(),
 	ok.
 

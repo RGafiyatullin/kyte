@@ -1,6 +1,6 @@
 #include "DbSetTask.h"
 
-namespace kyoto_client {
+namespace kyte {
 	DbSetTask::DbSetTask() {}
 	DbSetTask::~DbSetTask() {}
 	void DbSetTask::Run() {
