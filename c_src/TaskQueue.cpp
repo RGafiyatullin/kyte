@@ -77,14 +77,14 @@ namespace RG {
 		}
 		QueueLink* lnk = _Head;
 		while (lnk) {
-			QueueLink* toDelete = lnk;
-			lnk = lnk->Next;
-			
 			ITask* task = lnk->Data;
 			if ( task->ToBeDisposedByWorker() ) {
 				delete task;
 			}
-			delete lnk;
+			
+			QueueLink* toDelete = lnk;
+			lnk = lnk->Next;
+			delete toDelete;
 		}
 	}
 }

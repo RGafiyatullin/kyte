@@ -9,7 +9,7 @@ extern "C" {
 
 #include <kcpolydb.h>
 
-namespace kyoto_client {
+namespace kyte {
 	using kyotocabinet::PolyDB;
 
 	class NifAsyncTask : public RG::ITask {

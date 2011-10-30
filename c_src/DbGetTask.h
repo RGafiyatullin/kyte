@@ -1,10 +1,10 @@
 #ifndef _DbGetTask_h
 #define _DbGetTask_h
 
-#include "kyoto_client.h"
+#include "kyte.h"
 #include "DbGenericTask.h"
 
-namespace kyoto_client {
+namespace kyte {
 	class DbGetTask : public DbGenericTask {
 	private:
 		ERL_NIF_TERM _Key;

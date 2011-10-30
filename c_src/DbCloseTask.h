@@ -1,10 +1,10 @@
 #ifndef _DbCloseTask_h
 #define _DbCloseTask_h
 
-#include "kyoto_client.h"
+#include "kyte.h"
 #include "DbGenericTask.h"
 
-namespace kyoto_client {
+namespace kyte {
 	class DbCloseTask : public DbGenericTask {
 	private:
 	public:

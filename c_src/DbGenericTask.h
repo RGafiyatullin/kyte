@@ -3,7 +3,7 @@
 
 #include "NifAsyncTask.h"
 
-namespace kyoto_client {
+namespace kyte {
 	using kyotocabinet::PolyDB;
 
 	class DbGenericTask : public NifAsyncTask {

@@ -1,10 +1,10 @@
 #ifndef _DbOpenTask_h
 #define _DbOpenTask_h
 
-#include "kyoto_client.h"
+#include "kyte.h"
 #include "NifAsyncTask.h"
 
-namespace kyoto_client {
+namespace kyte {
 	class DbOpenTask : public NifAsyncTask {
 	private:
 		char _DbFile[MAX_PATH_LEN + 1];

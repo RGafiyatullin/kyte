@@ -1,6 +1,6 @@
 #include "DbGenericTask.h"
 
-namespace kyoto_client {
+namespace kyte {
 	using kyotocabinet::PolyDB;
 
 	DbGenericTask::DbGenericTask() {}

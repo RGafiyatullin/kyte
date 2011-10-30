@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <kcpolydb.h>
 
-#include "kyoto_client.h"
+#include "kyte.h"
 #include "TaskQueue.h"
 
 #include "NifAsyncTask.h"
@@ -22,7 +22,7 @@ extern "C" {
 		}
 	#define STD_TASK_BEGIN(TaskType) \
 		RG::TaskQueue* tq = TaskQueues[thrPoolIdx]; \
-		kyoto_client::TaskType* task = new kyoto_client::TaskType; \
+		kyte::TaskType* task = new kyte::TaskType; \
 		task->SetOpenDBs( OpenDatabases[thrPoolIdx] ); \
 		task->SetReplyTo( argv[0], argv[1] );
 	#define STD_TASK_END() \
@@ -205,5 +205,10 @@ extern "C" {
 		{"db_remove", 5, kc_db_remove}
 	};
 
-	ERL_NIF_INIT(kyoto_nifs,nif_funcs,NULL,NULL,NULL,NULL)
+	ERL_NIF_INIT( kyte,
+				nif_funcs,
+				NULL, NULL,
+				NULL,NULL )
+
+
 }
