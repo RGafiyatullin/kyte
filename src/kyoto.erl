@@ -59,3 +59,30 @@ db_close({PoolIdx, DbIdx}) ->
 		{Ref, Reply} ->
 			Reply
 	end.
+
+db_set(Db, K, V) when is_list(K) ->
+	db_set(Db, list_to_binary(K), V);
+db_set(Db, K, V) when is_list(V) ->
+	db_set(Db, K, list_to_binary(V));
+
+db_set({PoolIdx, DbIdx}, K, V) when is_binary(K) and is_binary(V) ->
+	Ref = make_ref(),
+	kyoto_nifs:db_set(self(), Ref, PoolIdx, DbIdx, K, V),
+	receive
+		{Ref, Reply} ->
+			Reply
+	end.
+
+
+db_get(Db, K) when is_list(K) ->
+	db_get(Db, list_to_binary(K));
+
+db_get({PoolIdx, DbIdx}, K) when is_binary(K) ->
+	Ref = make_ref(),
+	kyoto_nifs:db_get(self(), Ref, PoolIdx, DbIdx, K),
+	receive
+		{Ref, Reply} ->
+			Reply
+	end.
+
+

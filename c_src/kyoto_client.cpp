@@ -108,7 +108,7 @@ extern "C" {
 		int dbIdx;
 		assert( enif_get_int(env, argv[2], &thrPoolIdx) == true );
 		assert( enif_get_int(env, argv[3], &dbIdx) == true );
-		
+
 		CHECK_THR_POOL(thrPoolIdx);
 		STD_TASK_BEGIN(DbCloseTask);
 
@@ -117,6 +117,8 @@ extern "C" {
 		STD_TASK_END()
 		return enif_make_atom(env, "ok");
 	}
+
+	
 
 	static ErlNifFunc nif_funcs[] =
 	{

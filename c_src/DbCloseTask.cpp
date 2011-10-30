@@ -3,23 +3,20 @@
 namespace kyoto_client {
 	using kyotocabinet::PolyDB;
 
-	void DbCloseTask::SetDbIdx(int dbIdx) {
-		_DbIdx = dbIdx;
-	}
 	DbCloseTask::DbCloseTask() {}
 	DbCloseTask::~DbCloseTask() {}
 
 	void DbCloseTask::Run() {
-		if (_OpenDatabases[_DbIdx] == NULL) {
+		if ( DB() == NULL) {
 			Reply( enif_make_tuple2(_ErlEnv,
 				enif_make_atom(_ErlEnv, "error"),
 				enif_make_atom(_ErlEnv, "bad_db_idx")
 			) );
 			return;
 		}
-		PolyDB* db = _OpenDatabases[_DbIdx];
+		PolyDB* db = DB();
 		if ( db->close() ) {
-			_OpenDatabases[_DbIdx] = NULL;
+			DB() = NULL;
 			delete db;
 			Reply( enif_make_atom(_ErlEnv, "ok") );
 		}

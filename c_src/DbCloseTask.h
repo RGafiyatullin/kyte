@@ -2,18 +2,15 @@
 #define _DbCloseTask_h
 
 #include "kyoto_client.h"
-#include "NifAsyncTask.h"
+#include "DbGenericTask.h"
 
 namespace kyoto_client {
-	class DbCloseTask : public NifAsyncTask {
+	class DbCloseTask : public DbGenericTask {
 	private:
-		int _DbIdx;
 	public:
 		DbCloseTask();
 		virtual ~DbCloseTask();
 		virtual void Run();
-
-		void SetDbIdx(int dbIdx);
 	};
 }
 
