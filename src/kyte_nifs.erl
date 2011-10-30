@@ -15,8 +15,8 @@
 ]).
 
 load_nif() ->
-	PrivD = code:priv_dir(kyoto_client),
-	NifF = "kyte",
+	PrivD = code:priv_dir(kyte),
+	NifF = "kyte_nifs",
 	NifPath = filename:join(PrivD, NifF),
 	ok = erlang:load_nif(NifPath, 0),
 	
