@@ -1,18 +1,12 @@
-#include "StdAfx.h"
-#include <ITask.h>
-#ifndef WIN32
-	#include <unistd.h>
-#endif
+#include "ITask.h"
 
-#include <kps.h>
+#include <stdio.h>
 
 namespace RG {
 	ITask::ITask() : _Name(NULL) {
 		SetName("unnamed");
-		//fprintf(dbgout, "ITask CREATE %p\n", this);
 	}
 	ITask::~ITask() {
-		//fprintf(dbgout, "ITask DELETE %p\n", this);
 		delete [] _Name;
 	}
 	void ITask::Run() {}

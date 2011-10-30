@@ -1,222 +1,75 @@
 -module(kyoto).
 
--export([
-	start/0,
-	stop/0,
+% -export([
+% 	start/0,
+% 	stop/0,
 
-	start_server/1,
-	stop_server/1,
+% 	open/2,
+% 	close/1,
 
-	open/2,
-	close/1,
+% 	clear/1,
+% 	size/1,
+% 	count/1,
 
-	clear/1,
-	size/1,
-	count/1,
+% 	set/3,
+% 	get/2,
+% 	remove/2
+% ]).
 
-	set/3,
-	get/2,
-	remove/2
-]).
+-type pool_handle() :: integer().
+-type db_handle() :: {pool_handle(), integer()}.
 
--include("KyotoPS.hrl").
-
--type server_handle() :: pid().
--type db_handle() :: {server_handle(), integer()}.
-
+-export([start/0, stop/0]).
+-export([pool_create/1, pool_destroy/1]).
+-export([db_open/2, db_close/1]).
+-export([db_get/2, db_set/3, db_remove/2]).
 
 %%%
--spec start() -> any().
--spec stop() -> any().
-
 start() -> application:start(kyoto_client).
 stop() -> application:stop(kyoto_client).
 
 %%% 
--spec start_server(Opts :: [{any(), any()}] ) -> {ok, Server :: pid()} | {error, any()}.
--spec stop_server(Server :: pid()) -> any().
+-spec pool_create(Size :: integer()) -> {ok, pool_handle()} | {error, any()}.
+pool_create(Size) ->
+	kyoto_nifs:create_thr_pool(Size).
 
+-spec pool_destroy(Pool :: pool_handle()) -> ok | {error, any()}.
+pool_destroy(Pool) ->
+	%{error, will_crash}.
+	kyoto_nifs:destroy_thr_pool(Pool).
 
-start_server(Opts) ->
-	io:format("Opts: ~p~n", [Opts]),
-	{ok, Server} = supervisor:start_child(kc_port_srv_sup, [Opts]),
-	erlang:link(Server),
-	{ok, Server}.
-
-stop_server(Pid) ->
-	supervisor:terminate_child(kc_port_srv_sup, Pid),
-	supervisor:delete_child(kc_port_srv_sup, Pid).
-
-
-%%%
--spec open(Server :: pid(), FileName :: string()) -> {ok, db_handle()} | {error, any()}.
--spec close(db_handle()) -> ok | {error, any()}.
-
-open(Srv, FileName) ->
-	ReqType = 'KPSDbOpenRequest',
-	RecType = 'KPSDbOpenRequest',
-	Record = #'KPSDbOpenRequest' {
-		dbFile = FileName
-	},
-	case gen_server:call(Srv, {send_packet, ReqType, RecType, Record}, infinity) of
-		#'KPSDbOpenResponse'{
-			rc = 0,
-			dbHandle = Handle
-		} ->
-			{ok, {Srv, Handle}};
-		#'KPSDbOpenResponse'{
-			rc = RC,
-			errorDescription = ED
-		} ->
-			{error, {rc, RC, ED}}
+sync_command(F) ->
+	Ref = make_ref(),
+	case F(Ref) of
+		ok ->
+			receive
+				{Ref, Reply} ->
+					Reply
+			end;
+		InstantReply ->
+			InstantReply
 	end.
 
-close({Srv, Handle}) ->
-	ReqType = 'KPSDbCloseRequest',
-	RecType = 'KPSBasicRequest',
-	Record = #'KPSBasicRequest'{
-		dbHandle = Handle
-	},
-	case gen_server:call(Srv, {send_packet, ReqType, RecType, Record}, infinity) of
-		#'KPSBasicResponse'{
-			rc = 0
-		} ->
-			ok;
-		#'KPSBasicResponse'{
-			rc = RC,
-			errorDescription = ED
-		} ->
-			{error, {rc, RC, ED}}
-	end.
+-spec db_open(Pool :: pool_handle(), File :: string() ) -> {ok, db_handle()} | {error, any()}.
+db_open(Pool, File)  when is_integer(Pool) ->
+	sync_command( fun(Ref) -> kyoto_nifs:db_open(self(), Ref, Pool, File) end ).
+	
+db_close({PoolIdx, DbIdx}) when is_integer(PoolIdx) and is_integer(DbIdx) ->
+	sync_command( fun(Ref) -> kyoto_nifs:db_close(self(), Ref, PoolIdx, DbIdx) end ).
 
-size({Srv, Handle}) -> 
-	ReqType = 'KPSDbSizeRequest',
-	RecType = 'KPSBasicRequest',
-	Record = #'KPSBasicRequest'{
-		dbHandle = Handle
-	},
-	case gen_server:call(Srv, {send_packet, ReqType, RecType, Record}, infinity) of
-		#'KPSDbSizeResponse'{
-			rc = 0,
-			size = Size
-		} ->
-			{ok, Size};
-		#'KPSDbSizeResponse'{
-			rc = RC,
-			errorDescription = ED
-		} ->
-			{error, {rc, RC, ED}}
-	end.
+db_set(Db, K, V) when is_list(K) ->
+	db_set(Db, list_to_binary(K), V);
+db_set(Db, K, V) when is_list(V) ->
+	db_set(Db, K, list_to_binary(V));
 
-count({Srv, Handle}) -> 
-	ReqType = 'KPSDbCountRequest',
-	RecType = 'KPSBasicRequest',
-	Record = #'KPSBasicRequest'{
-		dbHandle = Handle
-	},
-	case gen_server:call(Srv, {send_packet, ReqType, RecType, Record}, infinity) of
-		#'KPSDbCountResponse'{
-			rc = 0,
-			count = Count
-		} ->
-			{ok, Count};
-		#'KPSDbCountResponse'{
-			rc = RC,
-			errorDescription = ED
-		} ->
-			{error, {rc, RC, ED}}
-	end.
+db_set({PoolIdx, DbIdx}, K, V) when is_integer(PoolIdx) and is_integer(DbIdx) and is_binary(K) and is_binary(V) ->
+	sync_command( fun(Ref) -> kyoto_nifs:db_set(self(), Ref, PoolIdx, DbIdx, K, V) end ).
 
-clear({Srv, Handle}) -> 
-	ReqType = 'KPSDbClearRequest',
-	RecType = 'KPSBasicRequest',
-	Record = #'KPSBasicRequest'{
-		dbHandle = Handle
-	},
-	case gen_server:call(Srv, {send_packet, ReqType, RecType, Record}, infinity) of
-		#'KPSBasicResponse'{
-			rc = 0
-		} ->
-			ok;
-		#'KPSBasicResponse'{
-			rc = RC,
-			errorDescription = ED
-		} ->
-			{error, {rc, RC, ED}}
-	end.
+db_get(Db, K) when is_list(K) ->
+	db_get(Db, list_to_binary(K));
 
-set(Db, K, V) when is_list(K) ->
-	K_as_B = list_to_binary(K),
-	set(Db, K_as_B, V);
-set(Db, K, V) when is_list(V) ->
-	V_as_B = list_to_binary(V),
-	set(Db, K, V_as_B);
+db_get({PoolIdx, DbIdx}, K) when is_integer(PoolIdx) and is_integer(DbIdx) and is_binary(K) ->
+	sync_command( fun(Ref) -> kyoto_nifs:db_get(self(), Ref, PoolIdx, DbIdx, K) end ).
 
-set({Srv, Handle}, K, V) when is_binary(K) and is_binary(V) ->
-	ReqType = 'KPSDbSetRequest',
-	RecType = 'KPSDbSetRequest',
-	Record = #'KPSDbSetRequest' {
-		dbHandle = Handle,
-		key = K,
-		value = V
-	},
-	case gen_server:call(Srv, {send_packet, ReqType, RecType, Record}, infinity) of
-		#'KPSBasicResponse'{
-			rc = 0
-		} ->
-			ok;
-		#'KPSBasicResponse'{
-			rc = RC,
-			errorDescription = ED
-		} ->
-			{error, {rc, RC, ED}}
-	end.
-
-get(Db, K) when is_list(K) ->
-	K_as_B = list_to_binary(K),
-	?MODULE:get(Db, K_as_B);
-
-get({Srv, Handle}, K) when is_binary(K) ->
-	ReqType = 'KPSDbGetRequest',
-	RecType = 'KPSDbGetRequest',
-	Record = #'KPSDbGetRequest' {
-		dbHandle = Handle,
-		key = K
-	},
-	case gen_server:call(Srv, {send_packet, ReqType, RecType, Record}, infinity) of
-		#'KPSDbGetResponse'{
-			rc = 0,
-			value = Value
-		} ->
-			{ok, Value};
-		#'KPSDbGetResponse'{
-			rc = RC,
-			errorDescription = ED
-		} ->
-			{error, {rc, RC, ED}}
-	end.
-
-remove(Db, K) when is_list(K) ->
-	K_as_B = list_to_binary(K),
-	remove(Db, K_as_B);
-
-remove({Srv, Handle}, K) when is_binary(K) ->
-	ReqType = 'KPSDbRemoveRequest',
-	RecType = 'KPSDbRemoveRequest',
-	Record = #'KPSDbRemoveRequest' {
-		dbHandle = Handle,
-		key = K
-	},
-	case gen_server:call(Srv, {send_packet, ReqType, RecType, Record}, infinity) of
-		#'KPSBasicResponse'{
-			rc = 0
-		} ->
-			ok;
-		#'KPSBasicResponse'{
-			rc = RC,
-			errorDescription = ED
-		} ->
-			{error, {rc, RC, ED}}
-	end.
-
-
+db_remove({PoolIdx, DbIdx}, K) when is_integer(PoolIdx) and is_integer(DbIdx) and is_binary(K) ->
+	sync_command( fun(Ref) -> kyoto_nifs:db_remove(self(), Ref, PoolIdx, DbIdx, K) end ).

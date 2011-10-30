@@ -2,14 +2,9 @@
 #ifndef _RG_Mutex_h
 #define _RG_Mutex_h
 
-#ifdef WIN32
-	#include <windows.h>
-	#define MutexHandle_t CRITICAL_SECTION
-#else
-	#include <stdio.h>
-	#include <pthread.h>
-	#define MutexHandle_t pthread_mutex_t
-#endif
+#include <stdio.h>
+#include <pthread.h>
+#define MutexHandle_t pthread_mutex_t
 
 namespace RG {
 	class Mutex {
@@ -29,11 +24,9 @@ namespace RG {
 		Mutex& _Mutex;
 	public:
 		Lock(Mutex& m) : _Mutex(m) {
-			//printf("l:l()\n");
 			_Mutex.Lock();
 		}
 		~Lock() {
-			//printf("l:~l()\n");
 			_Mutex.Unlock();
 		}
 		void Release() {

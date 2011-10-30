@@ -2,7 +2,7 @@
 #define _RG_Monitor_h
 
 #include <pthread.h>
-#include <Mutex.h>
+#include "Mutex.h"
 
 namespace RG {
 	class Monitor {
@@ -15,6 +15,7 @@ namespace RG {
 
 		void Wait(Mutex& m);
 		void Pulse();
+		void PulseAll();
 	};
 }
 
