@@ -1,5 +1,5 @@
 
--module(kyoto_client_sup).
+-module(kyte_sup).
 
 -behaviour(supervisor).
 
