@@ -8,9 +8,9 @@ namespace kyoto_client {
 
 	void DbCloseTask::Run() {
 		if ( DB() == NULL) {
-			Reply( enif_make_tuple2(_ErlEnv,
-				enif_make_atom(_ErlEnv, "error"),
-				enif_make_atom(_ErlEnv, "bad_db_idx")
+			Reply( enif_make_tuple2(Env(),
+				enif_make_atom(Env(), "error"),
+				enif_make_atom(Env(), "bad_db_idx")
 			) );
 			return;
 		}
@@ -18,12 +18,12 @@ namespace kyoto_client {
 		if ( db->close() ) {
 			DB() = NULL;
 			delete db;
-			Reply( enif_make_atom(_ErlEnv, "ok") );
+			Reply( enif_make_atom(Env(), "ok") );
 		}
 		else {
-			Reply( enif_make_tuple2(_ErlEnv,
-				enif_make_atom(_ErlEnv, "error"),
-				enif_make_string(_ErlEnv, db->error().name(), ERL_NIF_LATIN1 )
+			Reply( enif_make_tuple2(Env(),
+				enif_make_atom(Env(), "error"),
+				enif_make_string(Env(), db->error().name(), ERL_NIF_LATIN1 )
 			) );
 		}
 	}

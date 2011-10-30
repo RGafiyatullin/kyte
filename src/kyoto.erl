@@ -22,6 +22,7 @@
 -export([start/0, stop/0]).
 -export([pool_create/1, pool_destroy/1]).
 -export([db_open/2, db_close/1]).
+-export([db_get/2, db_set/3]).
 
 %%%
 start() -> application:start(kyoto_client).
@@ -37,28 +38,24 @@ pool_destroy(_Pool) ->
 	{error, will_crash}.
 	%kyoto_nifs:destroy_thr_pool(Pool).
 
+sync_command(F) ->
+	Ref = make_ref(),
+	case F(Ref) of
+		ok ->
+			receive
+				{Ref, Reply} ->
+					Reply
+			end;
+		InstantReply ->
+			InstantReply
+	end.
+
 -spec db_open(Pool :: pool_handle(), File :: string() ) -> {ok, db_handle()} | {error, any()}.
 db_open(Pool, File) ->
-	Ref = make_ref(),
-	ok = kyoto_nifs:db_open(self(), Ref, Pool, File),
-	receive
-		{Ref, Reply} ->
-			case Reply of
-				{ok, DbIdx} ->
-					{ok, {Pool, DbIdx}};
-				_ ->
-					Reply
-			end
-	end.
-
-
+	sync_command( fun(Ref) -> kyoto_nifs:db_open(self(), Ref, Pool, File) end ).
+	
 db_close({PoolIdx, DbIdx}) ->
-	Ref = make_ref(),
-	ok = kyoto_nifs:db_close(self(), Ref, PoolIdx, DbIdx),
-	receive
-		{Ref, Reply} ->
-			Reply
-	end.
+	sync_command( fun(Ref) -> kyoto_nifs:db_close(self(), Ref, PoolIdx, DbIdx) end ).
 
 db_set(Db, K, V) when is_list(K) ->
 	db_set(Db, list_to_binary(K), V);
@@ -66,23 +63,11 @@ db_set(Db, K, V) when is_list(V) ->
 	db_set(Db, K, list_to_binary(V));
 
 db_set({PoolIdx, DbIdx}, K, V) when is_binary(K) and is_binary(V) ->
-	Ref = make_ref(),
-	kyoto_nifs:db_set(self(), Ref, PoolIdx, DbIdx, K, V),
-	receive
-		{Ref, Reply} ->
-			Reply
-	end.
-
+	sync_command( fun(Ref) -> kyoto_nifs:db_set(self(), Ref, PoolIdx, DbIdx, K, V) end ).
 
 db_get(Db, K) when is_list(K) ->
 	db_get(Db, list_to_binary(K));
 
 db_get({PoolIdx, DbIdx}, K) when is_binary(K) ->
-	Ref = make_ref(),
-	kyoto_nifs:db_get(self(), Ref, PoolIdx, DbIdx, K),
-	receive
-		{Ref, Reply} ->
-			Reply
-	end.
-
+	sync_command( fun(Ref) -> kyoto_nifs:db_get(self(), Ref, PoolIdx, DbIdx, K) end ).
 

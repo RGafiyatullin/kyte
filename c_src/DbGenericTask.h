@@ -18,6 +18,7 @@ namespace kyoto_client {
 	protected:
 		int GetDbIdx() const;
 		PolyDB*& DB();
+		bool EnsureDB();
 	};
 }
 

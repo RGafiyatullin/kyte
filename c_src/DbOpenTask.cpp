@@ -20,26 +20,26 @@ namespace kyoto_client {
 		if ( dbPos == -1 ) {
 			fprintf(stderr, "DbOpenTask::Run() 2.1\r\n");
 			delete db;
-			Reply( enif_make_tuple2(_ErlEnv, 
-				enif_make_atom(_ErlEnv, "error"), 
-				enif_make_atom(_ErlEnv, "max_db_count_reached")
+			Reply( enif_make_tuple2(Env(), 
+				enif_make_atom(Env(), "error"), 
+				enif_make_atom(Env(), "max_db_count_reached")
 			) );
 		}
 		else {
 			fprintf(stderr, "DbOpenTask::Run() 2.2 '%s'\r\n", _DbFile);
 			if ( db->open(_DbFile, PolyDB::OCREATE | PolyDB::OWRITER) ) {
 				fprintf(stderr, "DbOpenTask::Run() 2.2.1\r\n");
-				Reply( enif_make_tuple2(_ErlEnv,
-					enif_make_atom(_ErlEnv, "ok"),
-					enif_make_int(_ErlEnv, dbPos)
+				Reply( enif_make_tuple2(Env(),
+					enif_make_atom(Env(), "ok"),
+					enif_make_int(Env(), dbPos)
 				) );
 			}
 			else {
 				fprintf(stderr, "DbOpenTask::Run() 2.2.2\r\n");
 				_OpenDatabases[dbPos] = NULL;
-				Reply( enif_make_tuple2(_ErlEnv, 
-					enif_make_atom(_ErlEnv, "error"), 
-					enif_make_string(_ErlEnv, db->error().name(), ERL_NIF_LATIN1)
+				Reply( enif_make_tuple2(Env(), 
+					enif_make_atom(Env(), "error"), 
+					enif_make_string(Env(), db->error().name(), ERL_NIF_LATIN1)
 				) );
 				delete db;
 			}

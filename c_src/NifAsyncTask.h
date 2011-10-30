@@ -14,10 +14,11 @@ namespace kyoto_client {
 
 	class NifAsyncTask : public RG::ITask {
 	private:
+		ErlNifEnv* _ErlEnv;
+
 		ERL_NIF_TERM _ReplyPid;
 		ERL_NIF_TERM _ReplyRef;
 	protected:
-		ErlNifEnv* _ErlEnv;
 		PolyDB** _OpenDatabases;
 	public:
 		NifAsyncTask();
@@ -28,6 +29,7 @@ namespace kyoto_client {
 
 		virtual bool ToBeDisposedByWorker() const;
 	protected:
+		ErlNifEnv* Env();
 		void Reply(ERL_NIF_TERM replyTerm);
 	};
 }
