@@ -13,6 +13,7 @@ namespace kyte {
 		assert( enif_inspect_iolist_as_binary(Env(), _Key, &binKey) == true );
 
 		unsigned char* vbuff = new unsigned char[KYTE_MAX_RECORD_SIZE];
+		
 		int32_t size = DB()->get((char*)binKey.data, binKey.size, (char*)vbuff, KYTE_MAX_RECORD_SIZE);
 		if (size == -1) {
 			delete [] vbuff;
@@ -27,6 +28,7 @@ namespace kyte {
 				enif_make_atom(Env(), "ok"),
 				enif_make_binary(Env(), &binValue)
 			) );
+			delete [] vbuff;
 		}
 	}
 
