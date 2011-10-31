@@ -90,7 +90,7 @@ extern "C" {
 	{
 		assert( argc == 4 );
 		assert( enif_is_pid(env, argv[0]) == true );
-		assert( enif_is_ref(env, argv[1]) == true );
+		// assert( enif_is_ref(env, argv[1]) == true );
 
 		int thrPoolIdx;
 		char pathToDb[ MAX_PATH_LEN + 1 ];
@@ -111,7 +111,7 @@ extern "C" {
 	{
 		assert( argc == 4 );
 		assert( enif_is_pid(env, argv[0]) == true );
-		assert( enif_is_ref(env, argv[1]) == true );
+		// assert( enif_is_ref(env, argv[1]) == true );
 
 		int thrPoolIdx;
 		int dbIdx;
@@ -131,7 +131,7 @@ extern "C" {
 	{
 		assert( argc == 6 );
 		assert( enif_is_pid(env, argv[0]) == true );
-		assert( enif_is_ref(env, argv[1]) == true );
+		// assert( enif_is_ref(env, argv[1]) == true );
 
 		int thrPoolIdx;
 		int dbIdx;
@@ -153,7 +153,7 @@ extern "C" {
 	{
 		assert( argc == 5 );
 		assert( enif_is_pid(env, argv[0]) == true );
-		assert( enif_is_ref(env, argv[1]) == true );
+		// assert( enif_is_ref(env, argv[1]) == true );
 
 		int thrPoolIdx;
 		int dbIdx;
@@ -174,7 +174,7 @@ extern "C" {
 	{
 		assert( argc == 5 );
 		assert( enif_is_pid(env, argv[0]) == true );
-		assert( enif_is_ref(env, argv[1]) == true );
+		// assert( enif_is_ref(env, argv[1]) == true );
 
 		int thrPoolIdx;
 		int dbIdx;

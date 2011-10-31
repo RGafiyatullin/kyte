@@ -41,7 +41,8 @@ handle_call({destroy_pool, PoolID}, _From, State = #state{ pools = Pools, db2poo
 	case kyte_nifs:destroy_thr_pool(PoolID) of
 		ok ->
 			%NPools = sets:del_element(PoolID, Pools),
-			DBs = dict:fetch(PoolID, Pools),
+			DBsSet = dict:fetch(PoolID, Pools),
+			DBs = sets:to_list(DBsSet),
 			shut_down_served_dbs(DBs),
 			NDB2Pool = clean_db2pool(DBs, DB2Pool),
 			NPools = dict:erase(PoolID, Pools),
@@ -52,12 +53,16 @@ handle_call({destroy_pool, PoolID}, _From, State = #state{ pools = Pools, db2poo
 
 handle_call({affiliate_db, PoolID, DBSrv}, _From, State = #state{ pools = Pools, db2pool = DB2Pool }) ->
 	erlang:monitor(process, DBSrv),
-	Set = dict:fetch(PoolID, Pools),
-	NSet = sets:add_element(DBSrv, Set),
-	NPools = dict:store(PoolID, NSet, Pools),
-	NDB2Pool = dict:store(DBSrv, PoolID, DB2Pool),
+	case dict:find(PoolID, Pools) of
+		{ok, Set} ->
+			NSet = sets:add_element(DBSrv, Set),
+			NPools = dict:store(PoolID, NSet, Pools),
+			NDB2Pool = dict:store(DBSrv, PoolID, DB2Pool),
 
-	{reply, ok, State#state{ pools = NPools, db2pool = NDB2Pool }};
+			{reply, ok, State#state{ pools = NPools, db2pool = NDB2Pool }};
+		_ ->
+			{reply, bad_pool_idx, State}
+	end;
 
 handle_call(Request, _From, State = #state{}) ->
 	{stop, {bad_arg, Request}, State}.

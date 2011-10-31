@@ -17,7 +17,8 @@
 ]).
 
 -record(state, {
-	handle :: undefined | {integer(), integer()}
+	handle :: undefined | {integer(), integer()},
+	cookie = make_ref()
 }).
 
 start_link(PoolIdx, DbPath) ->
@@ -35,6 +36,28 @@ init({PoolIdx, DbPath}) ->
 		handle = {PoolIdx, DbIdx}
 	}}.
 
+handle_call({db_set, K, V}, From, State = #state{ handle = {PoolIdx, DbIdx}, cookie = Cookie }) 
+when 
+	is_binary(K) 
+	and is_binary(V)
+->
+	kyte_nifs:db_set(self(), {Cookie, From}, PoolIdx, DbIdx, K, V),
+	{noreply, State};
+
+handle_call({db_get, K}, From, State = #state{ handle = {PoolIdx, DbIdx}, cookie = Cookie }) 
+when 
+	is_binary(K)
+->
+	kyte_nifs:db_get(self(), {Cookie, From}, PoolIdx, DbIdx, K),
+	{noreply, State};
+
+handle_call({db_remove, K}, From, State = #state{ handle = {PoolIdx, DbIdx}, cookie = Cookie }) 
+when 
+	is_binary(K)
+->
+	kyte_nifs:db_remove(self(), {Cookie, From}, PoolIdx, DbIdx, K),
+	{noreply, State};
+
 handle_call(db_close, _From, State = #state{}) ->
 	{stop, normal, ok, State};
 
@@ -44,6 +67,10 @@ handle_call(Request, _From, State = #state{}) ->
 handle_cast(Request, State = #state{}) ->
 	{stop, {bad_arg, Request}, State}.
 
+handle_info({ {Cookie, ReplyTo}, AsyncReply }, State = #state{ cookie = Cookie } ) ->
+	gen_server:reply(ReplyTo, AsyncReply),
+	{noreply, State};
+	
 handle_info(Message, State = #state{}) ->
 	{stop, {bad_arg, Message}, State}.
 
@@ -56,7 +83,6 @@ terminate(_Reason, _State = #state{
 		kyte_nifs:db_close(self(), Ref, PoolIdx, DbIdx)
 	end),
 	ok.
-
 
 code_change(_OldVsn, State, _Extra) ->
 	{ok, State}.
