@@ -15,7 +15,8 @@
 ]).
 
 -record(state, {
-	pools = sets:new()
+	pools = dict:new(),
+	db2pool = dict:new()
 }).
 
 start_link() ->
@@ -26,29 +27,59 @@ init({}) ->
 
 	{ok, #state{}}.
 
-handle_call({create_pool, PoolSize}, _From, State = #state{ pools = Pool }) ->
+handle_call({create_pool, PoolSize}, _From, State = #state{ pools = Pools }) ->
 	case kyte_nifs:create_thr_pool(PoolSize) of
 		{ok, PoolID} ->
-			NPools = sets:add_element(PoolID, Pool),
+			%NPools = sets:add_element(PoolID, Pools),
+			NPools = dict:store(PoolID, sets:new(), Pools),
 			{reply, {ok, PoolID}, State#state{ pools = NPools }};
 		OtherReply ->
 			{reply, OtherReply, State}
 	end;
 
-handle_call({destroy_pool, PoolID}, _From, State = #state{ pools = Pool }) ->
+handle_call({destroy_pool, PoolID}, _From, State = #state{ pools = Pools, db2pool = DB2Pool }) ->
 	case kyte_nifs:destroy_thr_pool(PoolID) of
 		ok ->
-			NPools = sets:del_element(PoolID, Pool),
-			{reply, ok, State#state{ pools = NPools }};
+			%NPools = sets:del_element(PoolID, Pools),
+			DBs = dict:fetch(PoolID, Pools),
+			shut_down_served_dbs(DBs),
+			NDB2Pool = clean_db2pool(DBs, DB2Pool),
+			NPools = dict:erase(PoolID, Pools),
+			{reply, ok, State#state{ pools = NPools, db2pool = NDB2Pool }};
 		OtherReply ->
 			{reply, OtherReply, State}
 	end;
+
+handle_call({affiliate_db, PoolID, DBSrv}, _From, State = #state{ pools = Pools, db2pool = DB2Pool }) ->
+	erlang:monitor(process, DBSrv),
+	Set = dict:fetch(PoolID, Pools),
+	NSet = sets:add_element(DBSrv, Set),
+	NPools = dict:store(PoolID, NSet, Pools),
+	NDB2Pool = dict:store(DBSrv, PoolID, DB2Pool),
+
+	{reply, ok, State#state{ pools = NPools, db2pool = NDB2Pool }};
 
 handle_call(Request, _From, State = #state{}) ->
 	{stop, {bad_arg, Request}, State}.
 
 handle_cast(Request, State = #state{}) ->
 	{stop, {bad_arg, Request}, State}.
+
+handle_info({'DOWN', _MonitorRef, _Type, DBSrv, _Info}, State = #state{ pools = Pools, db2pool = DB2Pool }) ->
+	case dict:find(DBSrv, DB2Pool) of
+		{ok, PoolID} ->
+			NDB2Pool = dict:erase(DBSrv, DB2Pool),
+			Set = dict:fetch(PoolID, Pools),
+			NSet = sets:del_element(DBSrv, Set),
+			NPools = dict:store(PoolID, NSet, Pools),
+
+			{noreply, State#state{
+				pools = NPools,
+				db2pool = NDB2Pool
+			}};
+		_ ->
+			{noreply, State}
+	end;
 
 handle_info(Message, State = #state{}) ->
 	{stop, {bad_arg, Message}, State}.
@@ -58,5 +89,21 @@ terminate(_Reason, _State) ->
 
 code_change(_OldVsn, State, _Extra) ->
 	{ok, State}.
+
+
+%%% Internal
+
+shut_down_served_dbs([]) ->
+	io:format("pool_mgr: All served DBs have been closed~n", []),
+	ok;
+shut_down_served_dbs([ Db | SoFar ]) ->
+	io:format("pool_mgr: Closing down served DB: ~p...~n", [Db]),
+	kyte:db_close(Db),
+	shut_down_served_dbs(SoFar).
+
+clean_db2pool([], Db2Pool) ->
+	Db2Pool;
+clean_db2pool([ DbSrv | SoFar ], Db2Pool) ->
+	clean_db2pool(SoFar, dict:erase(DbSrv, Db2Pool)).
 
 

@@ -26,6 +26,7 @@ start_link(PoolIdx, DbPath) ->
 init({PoolIdx, DbPath}) ->
 	process_flag(trap_exit, true),
 	io:format("init(~p)~n", [{PoolIdx, DbPath}]),
+	ok = gen_server:call(kyte_pool_mgr, {affiliate_db, PoolIdx, self()}),
 
 	{ok, DbIdx} = kyte_nifs:execute_sync(fun(Ref) ->
 		kyte_nifs:db_open(self(), Ref, PoolIdx, DbPath)
