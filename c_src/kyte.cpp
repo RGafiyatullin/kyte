@@ -13,6 +13,8 @@
 #include "DbGetTask.h"
 #include "DbRemoveTask.h"
 #include "DbClearTask.h"
+#include "DbCountTask.h"
+#include "DbSizeTask.h"
 
 extern "C" {
 	#include <erl_nif.h>
@@ -128,6 +130,46 @@ extern "C" {
 		return enif_make_atom(env, "ok");
 	}
 
+	static ERL_NIF_TERM kc_db_size(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+	{
+		assert( argc == 4 );
+		assert( enif_is_pid(env, argv[0]) == true );
+		// assert( enif_is_ref(env, argv[1]) == true );
+
+		int thrPoolIdx;
+		int dbIdx;
+		assert( enif_get_int(env, argv[2], &thrPoolIdx) == true );
+		assert( enif_get_int(env, argv[3], &dbIdx) == true );
+
+		CHECK_THR_POOL(thrPoolIdx);
+		STD_TASK_BEGIN(DbSizeTask);
+
+		task->SetDbIdx(dbIdx);
+
+		STD_TASK_END();
+		return enif_make_atom(env, "ok");
+	}
+
+	static ERL_NIF_TERM kc_db_count(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+	{
+		assert( argc == 4 );
+		assert( enif_is_pid(env, argv[0]) == true );
+		// assert( enif_is_ref(env, argv[1]) == true );
+
+		int thrPoolIdx;
+		int dbIdx;
+		assert( enif_get_int(env, argv[2], &thrPoolIdx) == true );
+		assert( enif_get_int(env, argv[3], &dbIdx) == true );
+
+		CHECK_THR_POOL(thrPoolIdx);
+		STD_TASK_BEGIN(DbCountTask);
+
+		task->SetDbIdx(dbIdx);
+
+		STD_TASK_END();
+		return enif_make_atom(env, "ok");
+	}
+
 	static ERL_NIF_TERM kc_db_clear(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 	{
 		assert( argc == 4 );
@@ -226,7 +268,9 @@ extern "C" {
 		{"db_get", 5, kc_db_get},
 		{"db_remove", 5, kc_db_remove},
 
-		{"db_clear", 4, kc_db_clear}
+		{"db_clear", 4, kc_db_clear},
+		{"db_count", 4, kc_db_count},
+		{"db_size", 4, kc_db_size}
 	};
 
 	ERL_NIF_INIT( kyte_nifs,

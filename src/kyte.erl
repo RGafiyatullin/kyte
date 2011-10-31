@@ -61,11 +61,9 @@ db_clear(DbSrv) ->
 
 -spec db_count(pid()) -> {ok, integer()} | {error, any()}.
 db_count(DbSrv) ->
-	{error, not_implemented}.
-	%gen_server:call(DbSrv, db_count, infinity).
+	gen_server:call(DbSrv, db_count, infinity).
 
 -spec db_size(pid()) -> {ok, integer()} | {error, any()}.
 db_size(DbSrv) ->
-	{error, not_implemented}.
-	%gen_server:call(DbSrv, db_size, infinity).
+	gen_server:call(DbSrv, db_size, infinity).
 

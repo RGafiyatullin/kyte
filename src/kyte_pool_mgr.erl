@@ -99,10 +99,8 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal
 
 shut_down_served_dbs([]) ->
-	io:format("pool_mgr: All served DBs have been closed~n", []),
 	ok;
 shut_down_served_dbs([ Db | SoFar ]) ->
-	io:format("pool_mgr: Closing down served DB: ~p...~n", [Db]),
 	kyte:db_close(Db),
 	shut_down_served_dbs(SoFar).
 

@@ -26,7 +26,6 @@ start_link(PoolIdx, DbPath) ->
 
 init({PoolIdx, DbPath}) ->
 	process_flag(trap_exit, true),
-	io:format("init(~p)~n", [{PoolIdx, DbPath}]),
 	ok = gen_server:call(kyte_pool_mgr, {affiliate_db, PoolIdx, self()}),
 
 	{ok, DbIdx} = kyte_nifs:execute_sync(fun(Ref) ->
@@ -96,7 +95,6 @@ terminate(_Reason, _State = #state{
 	handle = {PoolIdx, DbIdx}
 }) ->
 	% terminating
-	io:format("Terminating. Closing ~p~n", [{PoolIdx, DbIdx}]),
 	kyte_nifs:execute_sync(fun(Ref) ->
 		kyte_nifs:db_close(self(), Ref, PoolIdx, DbIdx)
 	end),
