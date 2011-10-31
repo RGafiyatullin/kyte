@@ -4,6 +4,7 @@
 -export([pool_create/1, pool_destroy/1]).
 -export([db_open/2, db_close/1]).
 -export([db_set/3, db_remove/2, db_get/2]).
+-export([db_clear/1, db_size/1, db_count/1]).
 
 -type bin_o_list() :: binary() | [ integer() ].
 
@@ -53,3 +54,18 @@ db_get(DbSrv, K) when is_list(K) ->
 
 db_get(DbSrv, K) when is_binary(K) ->
 	gen_server:call(DbSrv, {db_get, K}, infinity).
+
+-spec db_clear(pid()) -> ok | {error, any()}.
+db_clear(DbSrv) ->
+	gen_server:call(DbSrv, db_clear, infinity).
+
+-spec db_count(pid()) -> {ok, integer()} | {error, any()}.
+db_count(DbSrv) ->
+	{error, not_implemented}.
+	%gen_server:call(DbSrv, db_count, infinity).
+
+-spec db_size(pid()) -> {ok, integer()} | {error, any()}.
+db_size(DbSrv) ->
+	{error, not_implemented}.
+	%gen_server:call(DbSrv, db_size, infinity).
+

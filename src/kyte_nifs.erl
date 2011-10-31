@@ -15,7 +15,11 @@
 
 	db_set/6,
 	db_get/5,
-	db_remove/5
+	db_remove/5,
+
+	db_clear/4,
+	db_count/4,
+	db_size/4
 ]).
 
 load_nif() ->
