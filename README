@@ -1,5 +1,7 @@
 
-This thing is aimed to bind Erlang to Kyoto Cabinet via a nif-library
+This thing is aimed to bind Erlang to Kyoto Cabinet via a nif-library.
+
+The main aim is to move the long-playing requests to the separate thread in order not to bother BEAM scheduler. 
 
 
 
