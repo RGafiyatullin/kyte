@@ -1,18 +1,16 @@
-#include "DbCloseTask.h"
+#include "DbClearTask.h"
 
 namespace kyte {
 	using kyotocabinet::PolyDB;
 
-	DbCloseTask::DbCloseTask() {}
-	DbCloseTask::~DbCloseTask() {}
+	DbClearTask::DbClearTask() {}
+	DbClearTask::~DbClearTask() {}
 
-	void DbCloseTask::Run() {
+	void DbClearTask::Run() {
 		if (!EnsureDB()) return;
 		
 		PolyDB* db = DB();
-		if ( db->close() ) {
-			DB() = NULL;
-			delete db;
+		if ( db->clear() ) {
 			Reply( enif_make_atom(Env(), "ok") );
 		}
 		else {

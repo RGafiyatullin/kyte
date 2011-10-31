@@ -58,6 +58,24 @@ when
 	kyte_nifs:db_remove(self(), {Cookie, From}, PoolIdx, DbIdx, K),
 	{noreply, State};
 
+handle_call({db_count, K}, From, State = #state{ handle = {PoolIdx, DbIdx}, cookie = Cookie })
+when
+	is_binary(K)
+->
+	kyte_nifs:db_count(self(), {Cookie, From}, PoolIdx, DbIdx, K),
+	{noreply, State};
+
+handle_call({db_size, K}, From, State = #state{ handle = {PoolIdx, DbIdx}, cookie = Cookie })
+when
+	is_binary(K)
+->
+	kyte_nifs:db_size(self(), {Cookie, From}, PoolIdx, DbIdx, K),
+	{noreply, State};
+
+handle_call(db_clear, From, State = #state{ handle = {PoolIdx, DbIdx}, cookie = Cookie }) ->
+	kyte_nifs:db_clear(self(), {Cookie, From}, PoolIdx, DbIdx),
+	{noreply, State};
+
 handle_call(db_close, _From, State = #state{}) ->
 	{stop, normal, ok, State};
 
@@ -70,7 +88,7 @@ handle_cast(Request, State = #state{}) ->
 handle_info({ {Cookie, ReplyTo}, AsyncReply }, State = #state{ cookie = Cookie } ) ->
 	gen_server:reply(ReplyTo, AsyncReply),
 	{noreply, State};
-	
+
 handle_info(Message, State = #state{}) ->
 	{stop, {bad_arg, Message}, State}.
 

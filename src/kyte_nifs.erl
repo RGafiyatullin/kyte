@@ -71,6 +71,24 @@ db_get(_,_,_,_,_) ->
 db_remove(_,_,_,_,_) ->
 	{error, nif_not_loaded}.
 
+-spec db_clear(
+		ReplyPid :: pid(), ReplyRef :: reference(),
+		PoolIdx :: integer(), DbIdx :: integer()
+	) -> ok | {error, any()}.
+db_clear(_,_,_,_) -> {error, nif_not_loaded}.
+
+-spec db_count(
+		ReplyPid :: pid(), ReplyRef :: reference(),
+		PoolIdx :: integer(), DbIdx :: integer()
+	) -> {ok, integer()} | {error, any()}.
+db_count(_,_,_,_) -> {error, nif_not_loaded}.
+
+-spec db_size(
+		ReplyPid :: pid(), ReplyRef :: reference(),
+		PoolIdx :: integer(), DbIdx :: integer()
+	) -> {ok, integer()} | {error, any()}.
+db_size(_,_,_,_) -> {error, nif_not_loaded}.
+
 execute_sync(Fun) ->
 	Ref = make_ref(),
 	case Fun(Ref) of
