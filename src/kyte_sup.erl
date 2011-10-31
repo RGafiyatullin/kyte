@@ -25,6 +25,6 @@ start_link() ->
 
 init([]) ->
     {ok, { {one_for_one, 5, 10}, [
-    	
+    	{pool_mgr, {kyte_pool_mgr, start_link, []}, permanent, 50000, worker, [kyte_pool_mgr]}
     ]} }.
 

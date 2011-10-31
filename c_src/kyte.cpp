@@ -78,6 +78,7 @@ extern "C" {
 				openDBs[i] = NULL;
 			}
 		}
+		
 		tq->Shutdown();
 		delete tq;
 		TaskQueues[poolIdx] = NULL;
