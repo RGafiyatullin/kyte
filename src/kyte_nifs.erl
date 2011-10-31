@@ -3,6 +3,10 @@
 -on_load(load_nif/0).
 
 -export([
+	execute_sync/1,
+	execute_async/1
+]).
+-export([
 	create_thr_pool/1,
 	destroy_thr_pool/1,
 
@@ -66,3 +70,30 @@ db_get(_,_,_,_,_) ->
 	) -> ok | {error, any()}.
 db_remove(_,_,_,_,_) ->
 	{error, nif_not_loaded}.
+
+execute_sync(Fun) ->
+	Ref = make_ref(),
+	case Fun(Ref) of
+		ok ->	
+			receive
+				{Ref, AsyncReply} ->
+					AsyncReply
+			end;
+		SyncReply ->
+			SyncReply
+	end.
+
+execute_async(Fun) ->
+	Ref = make_ref(),
+	case Fun(Ref) of
+		ok ->
+			{async, fun() ->
+				receive
+					{Ref, AsyncReply} ->
+						AsyncReply
+				end
+			end};
+		SyncReply ->
+			{sync, SyncReply}
+	end.
+

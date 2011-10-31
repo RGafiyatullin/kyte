@@ -1,15 +1,9 @@
 -module(kyte_pool_mgr).
 
--export([]).
-
 -behaviour(gen_server).
 
 -export([
 	start_link/0
-]).
--export([
-	create_pool/1,
-	destroy_pool/1
 ]).
 -export([
 	init/1,
@@ -65,10 +59,4 @@ terminate(_Reason, _State) ->
 code_change(_OldVsn, State, _Extra) ->
 	{ok, State}.
 
--spec create_pool(PoolSize :: integer()) -> {ok, integer()} | {error, any()}.
-create_pool(PoolSize) ->
-	gen_server:call(?MODULE, {create_pool, PoolSize}, infinity).
 
--spec destroy_pool(PoolID :: integer()) -> ok | {error, any()}.
-destroy_pool(PoolID) ->
-	gen_server:call(?MODULE, {destroy_pool, PoolID}, infinity).

@@ -1,5 +1,5 @@
 
--module(kyte_sup).
+-module(kyte_db_sup).
 
 -behaviour(supervisor).
 
@@ -24,8 +24,6 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    {ok, { {one_for_one, 5, 10}, [
-    	{pool_mgr, {kyte_pool_mgr, start_link, []}, permanent, 50000, worker, [kyte_pool_mgr]},
-    	{db_sup, {kyte_db_sup, start_link, []}, permanent, infinity, supervisor, [kyte_db_sup]}
+    {ok, { {simple_one_for_one, 5, 10}, [
+    	{db, {kyte_db_srv, start_link, []}, temporary, 10000, worker, [kyte_db_srv]}
     ]} }.
-
