@@ -3,5 +3,22 @@ This thing is aimed to bind Erlang to Kyoto Cabinet via a nif-library.
 
 The main aim is to move the long-playing requests to the separate thread in order not to bother BEAM scheduler. 
 
+Usage:
+	Use 'kyte' module.
+	Any kyte-operation is done inside some thread pool.
+	You can create multiple thread pools within one Erlang-node.
+	
+
+	-spec pool_create( PoolSize ::integer() ) -> {ok, PoolID :: integer()} | {error, any()}.
+	-spec pool_destroy( PoolID :: integer() ) -> ok | {error, any()}.
+
+	-spec db_set(pid(), bin_o_list(), bin_o_list()) -> ok | {error, any()}.
+	-spec db_remove(pid(), bin_o_list()) -> ok | {error, any()}.
+	-spec db_get(pid(), bin_o_list()) -> {ok, binary()} | {error, any()}.
+
+	-spec db_clear(pid()) -> ok | {error, any()}.
+	-spec db_count(pid()) -> {ok, integer()} | {error, any()}.
+	-spec db_size(pid()) -> {ok, integer()} | {error, any()}.
+
 
 
