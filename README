@@ -1,5 +1,5 @@
 
-This thing is aimed to bind Erlang to Kyoto Cabinet via a port-server application.
+This thing is aimed to bind Erlang to Kyoto Cabinet via a nif-library
 
 
 
