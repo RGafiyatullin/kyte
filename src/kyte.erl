@@ -66,7 +66,7 @@ db_get(DbSrv, K) when is_binary(K) ->
 -spec db_xset(pid(), term(), term()) -> ok | {error, any()}.
 db_xset(DbSrv, Kt, Vt) ->
 	Kb = sext:encode(Kt),
-	Vb = sext:encode(Vt),
+	Vb = term_to_binary(Vt),
 	db_set(DbSrv, Kb, Vb).
 
 -spec db_xget(pid(), term()) -> {ok, term()} | {error, any()}.
@@ -74,7 +74,7 @@ db_xget(DbSrv, Kt) ->
 	Kb = sext:encode(Kt),
 	case db_get(DbSrv, Kb) of
 		{ok, Vb} ->
-			{ok, sext:decode(Vb)};
+			{ok, binary_to_term(Vb)};
 		Other ->
 			Other
 	end.
