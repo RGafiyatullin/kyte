@@ -1,4 +1,3 @@
-
 This thing is aimed to bind Erlang to Kyoto Cabinet via a nif-library.
 
 The main aim is to move the long-playing requests to the separate thread in order not to bother BEAM scheduler. 
@@ -15,6 +14,14 @@ Usage:
 	-spec db_set(pid(), bin_o_list(), bin_o_list()) -> ok | {error, any()}.
 	-spec db_remove(pid(), bin_o_list()) -> ok | {error, any()}.
 	-spec db_get(pid(), bin_o_list()) -> {ok, binary()} | {error, any()}.
+
+	-spec db_xset(pid(), term(), term()) -> ok | {error, any()}.
+	-spec db_xget(pid(), term()) -> {ok, term()} | {error, any()}.
+	-spec db_xremove(pid(), term()) -> ok | {error, any()}.
+
+	-spec db_kset(pid(), term(), bin_o_list()) -> ok | {error, any()}.
+	-spec db_kget(pid(), term()) -> {ok, term()} | {error, any()}.
+	-spec db_kremove(pid(), term()) -> ok | {error, any()}.
 
 	-spec db_clear(pid()) -> ok | {error, any()}.
 	-spec db_count(pid()) -> {ok, integer()} | {error, any()}.
