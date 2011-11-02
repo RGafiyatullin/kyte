@@ -4,7 +4,9 @@ The main aim is to move the long-playing requests to the separate thread in orde
 
 Usage:
 	Use 'kyte' module.
-	Any kyte-operation is done inside some thread pool.
+	Basic operations supported: get, set, remove, clear, size, count.
+	Those are done by kyte_db_srv behaving as gen_server.
+	Servers (kyte_db_srv) are affiliated to the thread pools. 
 	You can create multiple thread pools within one Erlang-node.
 	
 
