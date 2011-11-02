@@ -57,11 +57,8 @@ when
 	kyte_nifs:db_remove(self(), {Cookie, From}, PoolIdx, DbIdx, K),
 	{noreply, State};
 
-handle_call({db_count, K}, From, State = #state{ handle = {PoolIdx, DbIdx}, cookie = Cookie })
-when
-	is_binary(K)
-->
-	kyte_nifs:db_count(self(), {Cookie, From}, PoolIdx, DbIdx, K),
+handle_call(db_count, From, State = #state{ handle = {PoolIdx, DbIdx}, cookie = Cookie }) ->
+	kyte_nifs:db_count(self(), {Cookie, From}, PoolIdx, DbIdx),
 	{noreply, State};
 
 handle_call({db_size, K}, From, State = #state{ handle = {PoolIdx, DbIdx}, cookie = Cookie })
