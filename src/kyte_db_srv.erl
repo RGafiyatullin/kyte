@@ -85,6 +85,10 @@ handle_info({ {Cookie, ReplyTo}, AsyncReply }, State = #state{ cookie = Cookie }
 	gen_server:reply(ReplyTo, AsyncReply),
 	{noreply, State};
 
+handle_info({'EXIT', _, _}, State = #state{}) ->
+	io:format("kyte_db_srv:handle_info(EXIT)~n"),
+	{stop, normal, State};
+
 handle_info(Message, State = #state{}) ->
 	{stop, {bad_arg, Message}, State}.
 
@@ -92,6 +96,7 @@ terminate(_Reason, _State = #state{
 	handle = {PoolIdx, DbIdx}
 }) ->
 	% terminating
+	io:format("kyte_db_srv:terminate/3~n"),
 	kyte_nifs:execute_sync(fun(Ref) ->
 		kyte_nifs:db_close(self(), Ref, PoolIdx, DbIdx)
 	end),

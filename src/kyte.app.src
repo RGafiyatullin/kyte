@@ -1,6 +1,6 @@
 {application, kyte,
  [
-  {description, ""},
+  {description, "Kyte - kyoto binding for Erlang"},
   {vsn, "1"},
   {registered, []},
   {applications, [
