@@ -1,3 +1,6 @@
 c_src/*.o
 ebin
 priv/*.so
+priv/kyoto-root/
+priv/kyotocabinet-1.2.70.tar.gz
+priv/kyotocabinet-1.2.70/

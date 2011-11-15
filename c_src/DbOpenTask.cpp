@@ -39,7 +39,11 @@ namespace kyte {
 		}
 	}
 	void DbOpenTask::SetDbFile(const char* file) {
-		strlcpy(_DbFile, file, MAX_PATH_LEN);
+		// strlcpy(_DbFile, file, MAX_PATH_LEN);
+		for (int i = 0; i < MAX_PATH_LEN; i++) {
+			_DbFile[i] = file[i];
+			if ( file[i] == '\0' ) break;
+		}
 	}
 
 }
