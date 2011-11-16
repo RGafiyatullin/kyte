@@ -1,5 +1,9 @@
 #!/bin/bash
 
+LDFLAGS=""
+CXXFLAGS=""
+
+
 HERE="$(dirname $0)"
 cd "${HERE}"
 KYOTO_PREFIX="$(pwd)/kyoto-root"
