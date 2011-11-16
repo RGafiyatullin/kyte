@@ -72,8 +72,17 @@ handle_call(db_clear, From, State = #state{ handle = {PoolIdx, DbIdx}, cookie = 
 	kyte_nifs:db_clear(self(), {Cookie, From}, PoolIdx, DbIdx),
 	{noreply, State};
 
-handle_call(db_close, _From, State = #state{}) ->
+handle_call(db_close, _From, State = #state{ handle = {PoolIdx, DbIdx} }) ->
+	Ret = kyte_nifs:execute_sync(fun(Ref) ->
+		kyte_nifs:db_close(self(), Ref, PoolIdx, DbIdx)
+	end),
 	{stop, normal, ok, State};
+
+handle_call(db_close_rude, _From, State = #state{ handle = {PoolIdx, DbIdx} }) ->
+	Ret = kyte_nifs:execute_sync(fun(Ref) ->
+		kyte_nifs:db_close(self(), Ref, PoolIdx, DbIdx)
+	end),
+	{stop, rudely_closed, ok, State};
 
 handle_call(Request, _From, State = #state{}) ->
 	{stop, {bad_arg, Request}, State}.
@@ -86,20 +95,27 @@ handle_info({ {Cookie, ReplyTo}, AsyncReply }, State = #state{ cookie = Cookie }
 	{noreply, State};
 
 handle_info({'EXIT', _, _}, State = #state{}) ->
-	io:format("kyte_db_srv:handle_info(EXIT)~n"),
+	%io:format("kyte_db_srv:handle_info(EXIT)~n", []),
 	{stop, normal, State};
 
 handle_info(Message, State = #state{}) ->
 	{stop, {bad_arg, Message}, State}.
 
 terminate(_Reason, _State = #state{
+	handle = undefined
+}) ->
+	ok;
+
+terminate(_Reason, _State = #state{
 	handle = {PoolIdx, DbIdx}
 }) ->
 	% terminating
-	io:format("kyte_db_srv:terminate/3~n"),
-	kyte_nifs:execute_sync(fun(Ref) ->
+	%io:format("kyte_db_srv:terminate/3~n", []),
+	Ret = kyte_nifs:execute_sync(fun(Ref) ->
+		%io:format("kyte_db_srv:terminate/3 inside fun~n", []),
 		kyte_nifs:db_close(self(), Ref, PoolIdx, DbIdx)
 	end),
+	%io:format("kyte_db_srv:terminate/3 Ret: ~p~n", [Ret]),
 	ok.
 
 code_change(_OldVsn, State, _Extra) ->

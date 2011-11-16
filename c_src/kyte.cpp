@@ -81,11 +81,10 @@ extern "C" {
 				openDBs[i] = NULL;
 			}
 		}
-		
 		tq->Shutdown();
 		delete tq;
 		TaskQueues[poolIdx] = NULL;
-
+		
 		return enif_make_atom(env, "ok");
 	}
 

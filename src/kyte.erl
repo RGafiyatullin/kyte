@@ -2,7 +2,7 @@
 
 -export([start/0, stop/0]).
 -export([pool_create/1, pool_destroy/1]).
--export([db_open/2, db_close/1]).
+-export([db_open/2, db_close/1, db_close_rude/1]).
 
 -export([db_set/3, db_remove/2, db_get/2]).
 -export([db_xset/3, db_xremove/2, db_xget/2]).
@@ -34,6 +34,14 @@ db_open(PoolIdx, DbFile) ->
 
 db_close(DbSrv) ->
 	gen_server:call(DbSrv, db_close, infinity).
+
+db_close_rude(DbSrv) ->
+	case erlang:process_info(DbSrv) of
+		undefined ->
+			ok;
+		_ ->
+			gen_server:call(DbSrv, db_close_rude, infinity)
+	end.
 
 
 %%% Raw
@@ -99,8 +107,6 @@ db_kget(DbSrv, Kt) ->
 -spec db_kremove(pid(), term()) -> ok | {error, any()}.
 db_kremove(DbSrv, Kt) ->
 	db_xremove(DbSrv, Kt).
-
-
 
 
 -spec db_clear(pid()) -> ok | {error, any()}.

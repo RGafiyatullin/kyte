@@ -31,7 +31,7 @@ namespace RG {
 	}
 	void Thread::Run() {
 		if (!_CurrentTask) {
-			printf("Thread::Run() : No task set!\n");
+			// printf("Thread::Run(): No task set!\n");
 			return;
 		}
 		

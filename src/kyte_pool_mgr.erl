@@ -38,17 +38,24 @@ handle_call({create_pool, PoolSize}, _From, State = #state{ pools = Pools }) ->
 	end;
 
 handle_call({destroy_pool, PoolID}, _From, State = #state{ pools = Pools, db2pool = DB2Pool }) ->
-	case kyte_nifs:destroy_thr_pool(PoolID) of
-		ok ->
-			%NPools = sets:del_element(PoolID, Pools),
+	io:format("destroying pool #~p~n", [PoolID]),
+	case dict:find(PoolID, Pools) of
+		error ->
+			{reply, {error, enoent}, State};
+		_ ->
 			DBsSet = dict:fetch(PoolID, Pools),
 			DBs = sets:to_list(DBsSet),
 			shut_down_served_dbs(DBs),
 			NDB2Pool = clean_db2pool(DBs, DB2Pool),
 			NPools = dict:erase(PoolID, Pools),
-			{reply, ok, State#state{ pools = NPools, db2pool = NDB2Pool }};
-		OtherReply ->
-			{reply, OtherReply, State}
+
+			case kyte_nifs:destroy_thr_pool(PoolID) of
+				ok ->
+					%NPools = sets:del_element(PoolID, Pools),
+					{reply, ok, State#state{ pools = NPools, db2pool = NDB2Pool }};
+				OtherReply ->
+					{reply, OtherReply, State}
+			end
 	end;
 
 handle_call({affiliate_db, PoolID, DBSrv}, _From, State = #state{ pools = Pools, db2pool = DB2Pool }) ->
@@ -101,7 +108,7 @@ code_change(_OldVsn, State, _Extra) ->
 shut_down_served_dbs([]) ->
 	ok;
 shut_down_served_dbs([ Db | SoFar ]) ->
-	kyte:db_close(Db),
+	try kyte:db_close_rude(Db) catch _:_ -> ok end,
 	shut_down_served_dbs(SoFar).
 
 clean_db2pool([], Db2Pool) ->
