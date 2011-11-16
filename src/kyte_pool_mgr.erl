@@ -38,7 +38,6 @@ handle_call({create_pool, PoolSize}, _From, State = #state{ pools = Pools }) ->
 	end;
 
 handle_call({destroy_pool, PoolID}, _From, State = #state{ pools = Pools, db2pool = DB2Pool }) ->
-	io:format("destroying pool #~p~n", [PoolID]),
 	case dict:find(PoolID, Pools) of
 		error ->
 			{reply, {error, enoent}, State};
