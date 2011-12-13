@@ -6,7 +6,7 @@
 
 #define MAX_THR_POOLS 16
 #define MAX_PATH_LEN  512
-#define MAX_OPEN_DBS  128
+#define MAX_OPEN_DBS  512
 
 template <typename El_t>
 static int place_to_the_pool(El_t* item, El_t** pool, int poolSize) {
