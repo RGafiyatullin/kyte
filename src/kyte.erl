@@ -7,6 +7,7 @@
 -export([db_set/3, db_remove/2, db_get/2]).
 -export([db_xset/3, db_xremove/2, db_xget/2]).
 -export([db_kset/3, db_kremove/2, db_kget/2]).
+-export([db_zset/3, db_zremove/2, db_zget/2]).
 
 -export([db_clear/1, db_size/1, db_count/1]).
 
@@ -107,6 +108,29 @@ db_kget(DbSrv, Kt) ->
 -spec db_kremove(pid(), term()) -> ok | {error, any()}.
 db_kremove(DbSrv, Kt) ->
 	db_xremove(DbSrv, Kt).
+
+%%% Zipped term keys and values
+-spec db_zset(pid(), term(), term()) -> ok | {error, any()}.
+db_zset(DbSrv, K, V) ->
+	Kz = zlib:zip(term_to_binary(K)),
+	Vz = zlib:zip(term_to_binary(V)),
+	db_set(DbSrv, Kz, Vz).
+
+-spec db_zget(pid(), term()) -> {ok, term()} | {error, any()}.
+db_zget(DbSrv, K) ->
+	Kz = zlib:zip(term_to_binary(K)),
+	case db_get(DbSrv, Kz) of
+		{ok, Vz} ->
+			{ok, binary_to_term(zlib:unzip(Vz))};
+		Other ->
+			Other
+	end.
+
+-spec db_zremove(pid(), term()) -> ok | {error, any()}.
+db_zremove(DbSrv, K) ->
+	Kz = zlib:zip(term_to_binary(K)),
+	db_remove(DbSrv, Kz).
+
 
 
 -spec db_clear(pid()) -> ok | {error, any()}.
