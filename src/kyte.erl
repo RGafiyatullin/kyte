@@ -8,7 +8,7 @@
 
 -export([db_clear/1, db_size/1, db_count/1]).
 
--type bin_o_list() :: binary() | [ integer() ].
+-include("kyte.hrl").
 
 start() -> application:start(kyte).
 stop() -> application:stop(kyte).
@@ -57,7 +57,7 @@ db_get({DbSrv, Args}, K) ->
 	Kt = encode_key(K, Args),
 	case gen_server:call(DbSrv, {db_get, Kt}, infinity) of
 		{ok, Vt} ->
-			{ok, decode_value(Vt)};
+			{ok, decode_value(Vt, Args)};
 		Other ->
 			Other
 	end.
