@@ -25,6 +25,10 @@ Usage:
 	-spec db_kget(pid(), term()) -> {ok, term()} | {error, any()}.
 	-spec db_kremove(pid(), term()) -> ok | {error, any()}.
 
+	-spec db_zset(pid(), term(), term()) -> ok | {error, any()}.
+	-spec db_zget(pid(), term()) -> {ok, term()} | {error, any()}.
+	-spec db_zremove(pid(), term()) -> ok | {error, any()}.
+
 	-spec db_clear(pid()) -> ok | {error, any()}.
 	-spec db_count(pid()) -> {ok, integer()} | {error, any()}.
 	-spec db_size(pid()) -> {ok, integer()} | {error, any()}.
