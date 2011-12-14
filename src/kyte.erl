@@ -3,9 +3,7 @@
 -export([start/0, stop/0]).
 -export([pool_create/1, pool_destroy/1]).
 -export([db_open/2, db_close/1, db_close_rude/1]).
-
 -export([db_set/3, db_del/2, db_get/2]).
-
 -export([db_clear/1, db_size/1, db_count/1]).
 
 -include("kyte.hrl").
