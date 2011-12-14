@@ -8,6 +8,7 @@
 	key_codec = etf :: kyte_value_codec(),
 	val_codec = etf :: kyte_value_codec()
 }).
+
 -type kyte_db_args() :: #kyte_db_args{}.
 
 -endif. % kyte_hrl
