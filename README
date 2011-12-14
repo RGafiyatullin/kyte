@@ -26,7 +26,7 @@ Usage:
 		val_codec = etf :: kyte_value_codec()
 	}).
 
-	-type kyte_db() :: {pid(), #kyte_db_args{}}.
+	-type kyte_db() :: {pid(), #kyte_db_args{}}. % WARNING! Please do not rely on this type's internals: this may (and most likely will) be changed in future.
 
 	-spec db_open(PoolID :: integer(), DbArgs :: #kyte_db_args{} ) -> {ok, kyte_db()} | {error, any()}.
 	-spec db_close(kyte_db()) -> ok | {error, any()}.
