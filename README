@@ -32,7 +32,7 @@ Usage:
 	-spec db_close(kyte_db()) -> ok | {error, any()}.
 
 	-spec db_set(kyte_db(), term(), term()) -> ok | {error, any()}.
-	-spec db_remove(kyte_db(), term()) -> ok | {error, any()}.
+	-spec db_del(kyte_db(), term()) -> ok | {error, any()}.
 	-spec db_get(kyte_db(), term()) -> {ok, term()} | {error, any()}.
 
 
