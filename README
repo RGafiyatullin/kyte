@@ -14,6 +14,18 @@ Usage:
 	-spec pool_create( PoolSize ::integer() ) -> {ok, PoolID :: integer()} | {error, any()}.
 	-spec pool_destroy( PoolID :: integer() ) -> ok | {error, any()}.
 
+	-type kyte_value_codec() :: 
+		  raw   % raw binaries
+		| etf   % the erlang terms are converted to ETF (with erlang:term_to_binary/1)
+		| sext  % the erlang terms are converted to SEXT (with sext:encode/1)
+		| rawz  % raw binaries are zipped (with zlib:zip/1)
+		| etfz. % the terms are converted to ETF and zipped
+	-record(kyte_db_args, {
+		file :: string(),
+		key_codec = etf :: kyte_value_codec(),
+		val_codec = etf :: kyte_value_codec()
+	}).
+
 	-type kyte_db() :: {pid(), #kyte_db_args{}}.
 
 	-spec db_open(PoolID :: integer(), DbArgs :: #kyte_db_args{} ) -> {ok, kyte_db()} | {error, any()}.
