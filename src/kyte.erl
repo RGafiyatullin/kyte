@@ -33,10 +33,10 @@ db_open(PoolIdx, DbFile) ->
 			OtherReply
 	end.
 
-db_close(DbSrv) ->
+db_close({DbSrv, _}) ->
 	gen_server:call(DbSrv, db_close, infinity).
 
-db_close_rude(DbSrv) ->
+db_close_rude({DbSrv, _}) ->
 	case erlang:process_info(DbSrv) of
 		undefined ->
 			ok;
@@ -141,7 +141,6 @@ db_clear(DbSrv) ->
 db_count(DbSrv) ->
 	gen_server:call(DbSrv, db_count, infinity).
 
--spec db_size(pid()) -> {ok, integer()} | {error, any()}.
-db_size(DbSrv) ->
+-spec db_size({pid(), kyte_db_args()}) -> {ok, integer()} | {error, any()}.
+db_size({DbSrv, _}) ->
 	gen_server:call(DbSrv, db_size, infinity).
-

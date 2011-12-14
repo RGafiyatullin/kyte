@@ -10,28 +10,30 @@ Usage:
 	You can create multiple thread pools within one Erlang-node.
 	
 
+
 	-spec pool_create( PoolSize ::integer() ) -> {ok, PoolID :: integer()} | {error, any()}.
 	-spec pool_destroy( PoolID :: integer() ) -> ok | {error, any()}.
 
-	-spec db_set(pid(), bin_o_list(), bin_o_list()) -> ok | {error, any()}.
-	-spec db_remove(pid(), bin_o_list()) -> ok | {error, any()}.
-	-spec db_get(pid(), bin_o_list()) -> {ok, binary()} | {error, any()}.
+	-type kyte_value_codec() :: 
+		  raw   % raw binaries
+		| etf   % the erlang terms are converted to ETF (with erlang:term_to_binary/1)
+		| sext  % the erlang terms are converted to SEXT (with sext:encode/1)
+		| rawz  % raw binaries are zipped (with zlib:zip/1)
+		| etfz. % the terms are converted to ETF and zipped
+	-record(kyte_db_args, {
+		file :: string(),
+		key_codec = etf :: kyte_value_codec(),
+		val_codec = etf :: kyte_value_codec()
+	}).
 
-	-spec db_xset(pid(), term(), term()) -> ok | {error, any()}.
-	-spec db_xget(pid(), term()) -> {ok, term()} | {error, any()}.
-	-spec db_xremove(pid(), term()) -> ok | {error, any()}.
+	-type kyte_db() :: {pid(), #kyte_db_args{}}.
 
-	-spec db_kset(pid(), term(), bin_o_list()) -> ok | {error, any()}.
-	-spec db_kget(pid(), term()) -> {ok, term()} | {error, any()}.
-	-spec db_kremove(pid(), term()) -> ok | {error, any()}.
+	-spec db_open(PoolID :: integer(), DbArgs :: #kyte_db_args{} ) -> {ok, kyte_db()} | {error, any()}.
+	-spec db_close(kyte_db()) -> ok | {error, any()}.
 
-	-spec db_zset(pid(), term(), term()) -> ok | {error, any()}.
-	-spec db_zget(pid(), term()) -> {ok, term()} | {error, any()}.
-	-spec db_zremove(pid(), term()) -> ok | {error, any()}.
-
-	-spec db_clear(pid()) -> ok | {error, any()}.
-	-spec db_count(pid()) -> {ok, integer()} | {error, any()}.
-	-spec db_size(pid()) -> {ok, integer()} | {error, any()}.
+	-spec db_set(kyte_db(), term(), term()) -> ok | {error, any()}.
+	-spec db_remove(kyte_db(), term()) -> ok | {error, any()}.
+	-spec db_get(kyte_db(), term()) -> {ok, term()} | {error, any()}.
 
 
 
