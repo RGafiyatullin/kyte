@@ -32,10 +32,10 @@ db_open(PoolIdx, Args = #kyte_db_args{
 			OtherReply
 	end.
 
-db_close(DbSrv) ->
+db_close({DbSrv, _}) ->
 	gen_server:call(DbSrv, db_close, infinity).
 
-db_close_rude(DbSrv) ->
+db_close_rude({DbSrv, _}) ->
 	case erlang:process_info(DbSrv) of
 		undefined ->
 			ok;
@@ -211,4 +211,3 @@ db_count({DbSrv, _}) ->
 -spec db_size({pid(), kyte_db_args()}) -> {ok, integer()} | {error, any()}.
 db_size({DbSrv, _}) ->
 	gen_server:call(DbSrv, db_size, infinity).
-

@@ -107,7 +107,7 @@ code_change(_OldVsn, State, _Extra) ->
 shut_down_served_dbs([]) ->
 	ok;
 shut_down_served_dbs([ Db | SoFar ]) ->
-	try kyte:db_close_rude(Db) catch _:_ -> ok end,
+	try kyte:db_close_rude({Db, undefined}) catch _:_ -> ok end,
 	shut_down_served_dbs(SoFar).
 
 clean_db2pool([], Db2Pool) ->
