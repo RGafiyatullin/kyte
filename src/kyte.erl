@@ -48,12 +48,12 @@ db_close_rude({DbSrv, _}) ->
 -spec db_get({pid(), kyte_db_args()}, any()) -> {ok, term()} | {error, any()}.
 -spec db_del({pid(), kyte_db_args()}, any()) -> ok | {error, any()}.
 
-db_set({DbSrv, Args}, K, V) ->
+db_set({DbSrv, Args = #kyte_db_args{ parts = single }}, K, V) ->
 	Kt = encode_key(K, Args),
 	Vt = encode_value(V, Args),
 	gen_server:call(DbSrv, {db_set, Kt, Vt}, infinity).
-
-db_get({DbSrv, Args}, K) ->
+	
+db_get({DbSrv, Args = #kyte_db_args{ parts = single }}, K) ->
 	Kt = encode_key(K, Args),
 	case gen_server:call(DbSrv, {db_get, Kt}, infinity) of
 		{ok, Vt} ->
@@ -62,9 +62,12 @@ db_get({DbSrv, Args}, K) ->
 			Other
 	end.
 
-db_del({DbSrv, Args}, K) ->
+db_del({DbSrv, Args = #kyte_db_args{ parts = single }}, K) ->
 	Kt = encode_key(K, Args),
 	gen_server:call(DbSrv, {db_remove, Kt}, infinity).
+
+
+
 
 -spec db_clear({pid(), kyte_db_args()}) -> ok | {error, any()}.
 db_clear({DbSrv, _}) ->
