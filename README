@@ -18,10 +18,18 @@ Usage:
 		| sext  % the erlang terms are converted to SEXT (with sext:encode/1)
 		| rawz  % raw binaries are zipped (with zlib:zip/1)
 		| etfz. % the terms are converted to ETF and zipped
+	
+	-type kyte_partitioning_policy() ::
+		  single 
+		| {post_hash, Count :: integer(), HF :: hash_fun_bin() }.
+
 	-record(kyte_db_args, {
 		file :: string(),
+
 		key_codec = etf :: kyte_value_codec(),
-		val_codec = etf :: kyte_value_codec()
+		val_codec = etf :: kyte_value_codec(),
+
+		parts :: kyte_partitioning_policy()
 	}).
 
 	-type kyte_db() :: {pid(), #kyte_db_args{}}. % WARNING! Please do not rely on this type's internals: this may (and most likely will) be changed in future.
