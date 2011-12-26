@@ -93,7 +93,7 @@ stop_affiliated_dbs(_State = #state{
 	List = dict:to_list(Dict),
 	lists:foreach(fun({DbSrv, MonRef}) ->
 		erlang:demonitor(MonRef),
-		gen_server:call(DbSrv, db_close_rude, infinity)
+		kyte:db_close_rude(DbSrv)
 	end, List ),
 	ok.
 
