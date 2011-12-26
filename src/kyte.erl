@@ -11,13 +11,13 @@
 start() -> application:start(kyte).
 stop() -> application:stop(kyte).
 
--spec pool_create( PoolSize ::integer() ) -> {ok, PoolID :: integer()} | {error, any()}.
-pool_create(PoolSize) -> 
-	gen_server:call(kyte_pool_mgr, {create_pool, PoolSize}, infinity).
+-spec pool_create( PoolSize ::integer() ) -> {ok, Pool :: pid()} | {error, any()}.
+pool_create( PoolSize ) ->
+	supervisor:start_child(kyte_pool_sup, [PoolSize]).
 
--spec pool_destroy( PoolID :: integer() ) -> ok | {error, any()}.
-pool_destroy(PoolID) ->
-	gen_server:call(kyte_pool_mgr, {destroy_pool, PoolID}, infinity).
+-spec pool_destroy( Pool :: pid() ) -> ok | {error, any()}.
+pool_destroy( Pool ) ->
+	{error, not_impl}.
 
 db_open(PoolIdx, Args = #kyte_db_args{
 	file = DbFile
