@@ -45,8 +45,12 @@ handle_call({affiliate_db, DBSrv}, _From, State = #state{
 		affiliated_dbs = dict:store(DBSrv, MonRef, Affiliated)
 	}};
 
-handle_call(shutdown, _From, State = #state{}) ->
-	ok = stop_affiliated_dbs(State),
+handle_call(shutdown, _From, State = #state{
+	pool_id = PoolID,
+	affiliated_dbs = Dbs
+}) ->
+	ok = stop_affiliated_dbs(Dbs),
+	native_detroy_pool(PoolID),
 	{stop, normal, ok, State #state{
 		disposed = true
 	}};
@@ -74,8 +78,10 @@ handle_info(Message, State = #state{}) ->
 
 terminate(_Reason, #state{
 	pool_id = PoolID,
+	affiliated_dbs = Dbs,
 	disposed = false
 }) ->
+	ok = stop_affiliated_dbs(Dbs),
 	native_detroy_pool(PoolID),
 	ok;
 terminate(_Reason, _State) ->
@@ -87,9 +93,7 @@ code_change(_OldVsn, State, _Extra) ->
 
 %%% Internal
 
-stop_affiliated_dbs(_State = #state{
-	affiliated_dbs = Dict
-}) ->
+stop_affiliated_dbs(Dict) ->
 	List = dict:to_list(Dict),
 	lists:foreach(fun({DbSrv, MonRef}) ->
 		erlang:demonitor(MonRef),
