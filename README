@@ -9,10 +9,8 @@ Usage:
 	Servers (kyte_db_srv) are affiliated to the thread pools. 
 	You can create multiple thread pools within one Erlang-node.
 	
-
-
-	-spec pool_create( PoolSize ::integer() ) -> {ok, PoolID :: integer()} | {error, any()}.
-	-spec pool_destroy( PoolID :: integer() ) -> ok | {error, any()}.
+	-spec pool_create( PoolSize ::integer() ) -> {ok, Pool :: pid()} | {error, any()}.
+	-spec pool_destroy( Pool :: pid() ) -> ok | {error, any()}.
 
 	-type kyte_value_codec() :: 
 		  raw   % raw binaries
@@ -28,7 +26,7 @@ Usage:
 
 	-type kyte_db() :: {pid(), #kyte_db_args{}}. % WARNING! Please do not rely on this type's internals: this may (and most likely will) be changed in future.
 
-	-spec db_open(PoolID :: integer(), DbArgs :: #kyte_db_args{} ) -> {ok, kyte_db()} | {error, any()}.
+	-spec db_open(Pool :: pid(), DbArgs :: #kyte_db_args{} ) -> {ok, kyte_db()} | {error, any()}.
 	-spec db_close(kyte_db()) -> ok | {error, any()}.
 
 	-spec db_set(kyte_db(), term(), term()) -> ok | {error, any()}.
