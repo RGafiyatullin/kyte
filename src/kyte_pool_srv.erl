@@ -101,5 +101,5 @@ native_create_pool(PoolSize) ->
 	kyte_nifs:create_thr_pool(PoolSize).
 
 native_detroy_pool(PoolID) ->
-	ok.
+	kyte_nifs:destroy_thr_pool(PoolID).
 
