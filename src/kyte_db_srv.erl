@@ -17,21 +17,23 @@
 ]).
 
 -record(state, {
+	pool :: pid(),
 	handle :: undefined | {integer(), integer()},
 	cookie = make_ref()
 }).
 
-start_link(PoolIdx, DbPath) ->
-	gen_server:start_link(?MODULE, {PoolIdx, DbPath}, []).
+start_link(Pool, DbPath) ->
+	gen_server:start_link(?MODULE, {Pool, DbPath}, []).
 
-init({PoolIdx, DbPath}) ->
+init({Pool, DbPath}) ->
 	process_flag(trap_exit, true),
-	ok = gen_server:call(kyte_pool_mgr, {affiliate_db, PoolIdx, self()}),
+	{ok, PoolIdx} = gen_server:call(Pool, {affiliate_db, self()}, infinity),
 
 	{ok, DbIdx} = kyte_nifs:execute_sync(fun(Ref) ->
 		kyte_nifs:db_open(self(), Ref, PoolIdx, DbPath)
 	end),
 	{ok, #state{
+		pool = Pool,
 		handle = {PoolIdx, DbIdx}
 	}}.
 
@@ -73,13 +75,13 @@ handle_call(db_clear, From, State = #state{ handle = {PoolIdx, DbIdx}, cookie = 
 	{noreply, State};
 
 handle_call(db_close, _From, State = #state{ handle = {PoolIdx, DbIdx} }) ->
-	Ret = kyte_nifs:execute_sync(fun(Ref) ->
+	_Ret = kyte_nifs:execute_sync(fun(Ref) ->
 		kyte_nifs:db_close(self(), Ref, PoolIdx, DbIdx)
 	end),
 	{stop, normal, ok, State};
 
 handle_call(db_close_rude, _From, State = #state{ handle = {PoolIdx, DbIdx} }) ->
-	Ret = kyte_nifs:execute_sync(fun(Ref) ->
+	_Ret = kyte_nifs:execute_sync(fun(Ref) ->
 		kyte_nifs:db_close(self(), Ref, PoolIdx, DbIdx)
 	end),
 	{stop, rudely_closed, ok, State};
@@ -111,7 +113,7 @@ terminate(_Reason, _State = #state{
 }) ->
 	% terminating
 	%io:format("kyte_db_srv:terminate/3~n", []),
-	Ret = kyte_nifs:execute_sync(fun(Ref) ->
+	_Ret = kyte_nifs:execute_sync(fun(Ref) ->
 		%io:format("kyte_db_srv:terminate/3 inside fun~n", []),
 		kyte_nifs:db_close(self(), Ref, PoolIdx, DbIdx)
 	end),

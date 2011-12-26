@@ -14,11 +14,10 @@
 	code_change/3
 ]).
 
--include("logging.hrl").
-
 -record(state, {
 	pool_id :: integer(),
 	pool_size :: integer(),
+	affiliated_dbs = dict:new() :: dict(),
 	disposed = false
 }).
 
@@ -32,19 +31,43 @@ init({PoolSize}) ->
 			{ok, #state{
 				pool_id = PoolID,
 				pool_size = PoolSize
-			}}.
+			}};
 		OtherReply ->
 			{stop, OtherReply}
 	end.
 
-handle_call({open_db, DbPath}, _From, State = #state{}) ->
-	{stop, {error, not_impl}, State};
+handle_call({affiliate_db, DBSrv}, _From, State = #state{
+	pool_id = PoolId,
+	affiliated_dbs = Affiliated
+}) ->
+	MonRef = erlang:monitor(process, DBSrv),
+	{reply, {ok, PoolId}, State#state{
+		affiliated_dbs = dict:store(DBSrv, MonRef, Affiliated)
+	}};
+
+handle_call(shutdown, _From, State = #state{}) ->
+	ok = stop_affiliated_dbs(State),
+	{stop, normal, ok, State #state{
+		disposed = true
+	}};
 
 handle_call(Request, _From, State = #state{}) ->
 	{stop, {bad_arg, Request}, State}.
 
 handle_cast(Request, State = #state{}) ->
 	{stop, {bad_arg, Request}, State}.
+
+handle_info( {'DOWN', _MonRef, process, DBSrv, _Reason}, State = #state{
+	affiliated_dbs = Affiliated
+} ) ->
+	case dict:is_key(DBSrv, Affiliated) of
+		true ->
+			{noreply, State #state{
+				affiliated_dbs = dict:erase(DBSrv, Affiliated)
+			}};
+		_ ->
+			{noreply, State}
+	end;
 
 handle_info(Message, State = #state{}) ->
 	{stop, {bad_arg, Message}, State}.
@@ -58,14 +81,21 @@ terminate(_Reason, #state{
 terminate(_Reason, _State) ->
 	ok.
 
-terminate(_Reason, _State) ->
-	ok.
-
 code_change(_OldVsn, State, _Extra) ->
 	{ok, State}.
 
 
 %%% Internal
+
+stop_affiliated_dbs(_State = #state{
+	affiliated_dbs = Dict
+}) ->
+	List = dict:to_list(Dict),
+	lists:foreach(fun({DbSrv, MonRef}) ->
+		erlang:demonitor(MonRef),
+		gen_server:call(DbSrv, db_close_rude, infinity)
+	end, List ),
+	ok.
 
 native_create_pool(PoolSize) ->
 	kyte_nifs:create_thr_pool(PoolSize).

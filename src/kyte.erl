@@ -17,7 +17,7 @@ pool_create( PoolSize ) ->
 
 -spec pool_destroy( Pool :: pid() ) -> ok | {error, any()}.
 pool_destroy( Pool ) ->
-	{error, not_impl}.
+	gen_server:call(Pool, shutdown, infinity).
 
 db_open(PoolIdx, Args = #kyte_db_args{
 	file = DbFile

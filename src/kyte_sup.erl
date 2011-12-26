@@ -25,7 +25,7 @@ start_link() ->
 
 init([]) ->
     {ok, { {one_for_one, 5, 10}, [
-    	{pool_mgr, {kyte_pool_mgr, start_link, []}, permanent, 50000, worker, [kyte_pool_mgr]},
+    	{pool_sup, {kyte_pool_sup, start_link, []}, permanent, infinity, supervisor, [kyte_pool_sup]},
     	{db_sup, {kyte_db_sup, start_link, []}, permanent, infinity, supervisor, [kyte_db_sup]}
     ]} }.
 
