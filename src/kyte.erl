@@ -32,11 +32,12 @@ db_open(Pool, Args = #kyte_db_args{
 	file = DbFile,
 	parts = { PreOrPost, PartsCount, _HF }
 }) when (PreOrPost == pre_hash) or (PreOrPost == post_hash) ->
-	Partitions = lists:map(fun(Idx) ->
-		PartFile = lists:flatten(io_lib:format(DbFile, [Idx])),
-		{ ok, DbSrv } = start_single_partition(Pool, PartFile),
+	FileNames = kyte_parts:file_names(DbFile, PartsCount),
+	StartSinglePartF = fun(File) ->
+		{ ok, DbSrv } = start_single_partition(Pool, File),
 		DbSrv
-	end, lists:seq(1, PartsCount)),
+	end,
+	Partitions = lists:map(StartSinglePartF, FileNames),
 	{ ok, {Partitions, Args} }.
 
 db_close({DbSrv, #kyte_db_args{ parts = single }}) ->
@@ -62,24 +63,25 @@ db_close_rude({DbSrv, _}) ->
 -spec db_del({pid(), kyte_db_args()}, any()) -> ok | {error, any()}.
 
 db_set({DbSrv, Args = #kyte_db_args{ parts = single }}, K, V) ->
-	Kt = encode_key(K, Args),
-	Vt = encode_value(V, Args),
+	Kt = kyte_codec:encode_key(K, Args),
+	Vt = kyte_codec:encode_value(V, Args),
 	gen_server:call(DbSrv, {db_set, Kt, Vt}, infinity);
 
 db_set({Parts, Args = #kyte_db_args{ parts = { post_hash, PartsCount, HF } }}, K, V) ->
 	PartsCount = length(Parts),
 
-	Kt = encode_key(K, Args),
-	Vt = encode_value(V, Args),
-	{ok, DbSrv} = choose_partition(Kt, HF, Parts),
-	gen_server:call(DbSrv, {db_set, Kt, Vt}, infinity).
+	Kt = kyte_codec:encode_key(K, Args),
+	Vt = kyte_codec:encode_value(V, Args),
+	kyte_parts:with_partition(Kt, HF, Parts, fun(DbSrv) ->
+		gen_server:call(DbSrv, {db_set, Kt, Vt}, infinity)
+	end).
 	
 
 db_get({DbSrv, Args = #kyte_db_args{ parts = single }}, K) ->
-	Kt = encode_key(K, Args),
+	Kt = kyte_codec:encode_key(K, Args),
 	case gen_server:call(DbSrv, {db_get, Kt}, infinity) of
 		{ok, Vt} ->
-			{ok, decode_value(Vt, Args)};
+			{ok, kyte_codec:decode_value(Vt, Args)};
 		Other ->
 			Other
 	end;
@@ -87,26 +89,28 @@ db_get({DbSrv, Args = #kyte_db_args{ parts = single }}, K) ->
 db_get({Parts, Args = #kyte_db_args{ parts = { post_hash, PartsCount, HF } }}, K) ->
 	PartsCount = length(Parts),
 
-	Kt = encode_key(K, Args),
-	{ok, DbSrv} = choose_partition(Kt, HF, Parts),
-	case gen_server:call(DbSrv, {db_get, Kt}, infinity) of
-		{ok, Vt} ->
-			{ok, decode_value(Vt, Args)};
-		Other ->
-			Other
-	end.
+	Kt = kyte_codec:encode_key(K, Args),
+	kyte_parts:with_partition(Kt, HF, Parts, fun(DbSrv) ->
+		case gen_server:call(DbSrv, {db_get, Kt}, infinity) of
+			{ok, Vt} ->
+				{ok, kyte_codec:decode_value(Vt, Args)};
+			Other ->
+				Other
+		end
+	end).
 
 
 db_del({DbSrv, Args = #kyte_db_args{ parts = single }}, K) ->
-	Kt = encode_key(K, Args),
+	Kt = kyte_codec:encode_key(K, Args),
 	gen_server:call(DbSrv, {db_remove, Kt}, infinity);
 
 db_del({Parts, Args = #kyte_db_args{ parts = { post_hash, PartsCount, HF } }}, K) ->
 	PartsCount = length(Parts),
 
-	Kt = encode_key(K, Args),
-	{ok, DbSrv} = choose_partition(Kt, HF, Parts),
-	gen_server:call(DbSrv, {db_remove, Kt}, infinity).
+	Kt = kyte_codec:encode_key(K, Args),
+	kyte_parts:with_partition(Kt, HF, Parts, fun(DbSrv) ->
+		gen_server:call(DbSrv, {db_remove, Kt}, infinity)
+	end).
 
 
 
@@ -145,55 +149,6 @@ db_size({Parts, #kyte_db_args{ parts = { PreOrPost, _, _ } }}) when (PreOrPost =
 
 
 %%% Internal
-encode_key(K, #kyte_db_args{
-	key_codec = C
-}) ->
-	encode_with(C, K).
-
-encode_value(V, #kyte_db_args{
-	val_codec = C
-}) ->
-	encode_with(C, V).
-
-encode_with(C, V) ->
-	case C of
-		raw ->
-			V;
-		rawz ->
-			zlib:zip(V);
-		etf ->
-			term_to_binary(V);
-		etfz ->
-			zlib:zip(term_to_binary(V));
-		sext ->
-			sext:encode(V)
-	end.
-
-decode_value(V, #kyte_db_args{
-	val_codec = C
-}) ->
-	decode_with(C, V).
-
-decode_with(C, V) ->
-	case C of
-		raw ->
-			V;
-		rawx ->
-			zlib:unzip(V);
-		etf ->
-			binary_to_term(V);
-		etfz ->
-			binary_to_term(zlib:unzip(V));
-		sext ->
-			sext:decode(V)
-	end.
-
-choose_partition(K, HF, Parts) ->
-	Kh = HF(K),
-	Bits = size(Kh) * 8,
-	<<Hash:Bits/unsigned>> = Kh,
-	PartIdx = ( Hash rem length(Parts) ) + 1,
-	{ok, lists:nth(PartIdx, Parts)}.
 
 start_single_partition(Pool, DbFile) ->
 	case supervisor:start_child(kyte_db_sup, [Pool, DbFile]) of
