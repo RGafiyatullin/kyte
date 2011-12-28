@@ -1,12 +1,12 @@
 
 supervision tree:
 
-kyte_sup (A)
- \_ kyte_pool_sup (S)
- |  \_ kyte_pool_srv
- \_ kyte_db_sup_sup (S)
-    \_ kyte_partition_sup (O)
-    | \_ kyte_partition_srv
-    |_ kyte_db_srv
-    \_ kyte_db_request_sup (S)
-       \_ kyte_db_request_fsm
+	kyte_sup (A)
++	 \_ kyte_pool_sup (S) 
++	 |  \_ kyte_pool_srv
+	 \_ kyte_db_sup_sup (S)
+	    \_ kyte_db_partition_sup (O)
++	    | \_ kyte_db_partition_srv
+	    |_ kyte_db_srv
+	    \_ kyte_db_request_sup (S)
+	       \_ kyte_db_request_fsm

@@ -19,62 +19,49 @@
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 % SOFTWARE.
 
--module(kyte_parts).
+-module(kyte_db_srv).
 
-% -export([
-% 	file_names/2,
-% 	choose_partition/3,
-% 	with_partition/4
-% 	]).
+-behaviour(gen_server).
 
 -export([
-	init/3
+	start_link/1
+]).
+-export([
+	init/1,
+	handle_call/3,
+	handle_cast/2,
+	handle_info/2,
+	terminate/2,
+	code_change/3
 ]).
 
--record(state, {
-	type :: kyte_partitioning_type(),
-	partitions :: [pid()]
-}).
+-include("kyte.hrl").
 
-init(Pool, DbFile, single) ->
-	{ok, SinglePart} = start_single_partition(Pool, DbFile),
-	#state{
-		type = single,
-		partitions = SinglePart
-	};
+-record(state, {}).
 
-init(Pool, DbFile, Type = {post_hash, PC, HF}) ->
-	{ok, PartsList} = start_multiple_parts(Pool, DbFile, PC),
-	#state{
-		type = Type,
-		partitions = PartsList
-	}.
+start_link(Pool, Args) ->
+	gen_server:start_link(?MODULE, {Pool, Args}, []).
 
+init({{Pool, #kyte_db_args{
+	file = DbFile,
+	parts = DbPartsType
+}}) ->
+	Parts = kyte_parts:init(Pool, DbFile, DbPartsType),
+	{ok, #state{}}.
 
-start_single_partition(Pool, DbFile) ->
-	{error, not_impl}.
+handle_call(Request, _From, State = #state{}) ->
+	{stop, {bad_arg, Request}, State}.
 
-start_multiple_parts(Pool, DbFile, PC) ->
-	{error, not_impl}.
+handle_cast(Request, State = #state{}) ->
+	{stop, {bad_arg, Request}, State}.
 
+handle_info(Message, State = #state{}) ->
+	{stop, {bad_arg, Message}, State}.
 
-% file_names(DbFile, PartsCount) ->
-% 	lists:map(fun(Idx) ->
-% 		lists:flatten(io_lib:format(DbFile, [Idx]))
-% 	end, lists:seq(1, PartsCount)).
+terminate(_Reason, _State) ->
+	ok.
 
-% choose_partition(K, HF, Parts) ->
-% 	Kh = HF(K),
-% 	Bits = size(Kh) * 8,
-% 	<<Hash:Bits/unsigned>> = Kh,
-% 	PartIdx = ( Hash rem length(Parts) ) + 1,
-% 	{ok, lists:nth(PartIdx, Parts)}.
-
-% with_partition(K, HF, Parts, Func) ->
-% 	{ok, Part} = choose_partition(K, HF, Parts),
-% 	Func(Part).
-
-%%% Internal
-
+code_change(_OldVsn, State, _Extra) ->
+	{ok, State}.
 
 

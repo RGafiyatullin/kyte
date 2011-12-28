@@ -28,7 +28,7 @@
 -type hash_fun_term() :: any(). % fun( ( any() ) -> integer() ). %% this one breaks the highlight in Sublime Text 2 :(
 -type hash_fun_bin() :: any(). % fun( ( binary() ) -> integer() ).
 
--type kyte_partitioning_policy() ::
+-type kyte_partitioning_type() ::
 	  single 
 	| {pre_hash, Count :: integer(), HF :: hash_fun_term() }
 	| {post_hash, Count :: integer(), HF :: hash_fun_bin() }.
@@ -39,7 +39,7 @@
 	key_codec = etf :: kyte_value_codec(),
 	val_codec = etf :: kyte_value_codec(),
 
-	parts = single :: kyte_partitioning_policy()
+	parts = single :: kyte_partitioning_type()
 }).
 
 -type kyte_db_args() :: #kyte_db_args{}.
