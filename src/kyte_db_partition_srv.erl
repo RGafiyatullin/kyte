@@ -1,4 +1,4 @@
--module(kyte_db_srv).
+-module(kyte_db_partition_srv).
 
 -behaviour(gen_server).
 
