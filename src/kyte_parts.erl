@@ -61,11 +61,11 @@ partition_init_notify( PartsCtx = #state{
 close_partitions(#state{
 	partitions = Dict
 }) ->
-	lists:foreach( fun({_, PartSrv}) ->
-		io:format("Shutting down ~p~n", [PartSrv]),
-		Ret = gen_server:call(PartSrv, db_close, infinity),
-		io:format("Shutting down ~p -> ~p~n", [PartSrv, Ret])
-	end, dict:to_list(Dict) ),
+	lists:foreach( 
+		fun({_, PartSrv}) ->
+			_Ret = gen_server:call(PartSrv, db_close, infinity)
+		end,
+		dict:to_list(Dict) ),
 	ok.
 
 fold(#state{

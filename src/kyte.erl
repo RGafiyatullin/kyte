@@ -14,13 +14,19 @@
 start() -> application:start(kyte).
 stop() -> application:stop(kyte).
 
-
-
 -spec pool_create( PoolSize ::integer() ) -> {ok, Pool :: pid()} | {error, any()}.
 -spec pool_destroy( Pool :: pid() ) -> ok | {error, any()}.
 
 -spec db_open( Pool :: pid(), kyte_db_args() ) -> {ok, DbSrv :: pid() }.
 -spec db_close( DbSrv :: pid() ) -> ok.
+
+-spec db_set( DbSrv :: pid(), K :: term(), V :: term() ) -> ok | {error, any()}.
+-spec db_get( DbSrv :: pid(), K :: term() ) -> {ok, Value :: term()} | {error, any()}.
+-spec db_del( DbSrv :: pid(), K :: term() ) -> ok | {error, any()}.
+
+-spec db_count( DbSrv :: pid() ) -> {ok, integer()} | {error, any()}.
+-spec db_size( DbSrv :: pid() ) -> {ok, integer()} | {error, any()}.
+-spec db_clear( DbSrv :: pid() ) -> ok | {error, any()}.
 
 
 %%% Pool operations

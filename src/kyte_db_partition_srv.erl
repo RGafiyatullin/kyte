@@ -78,11 +78,9 @@ handle_call(db_clear, From, State = #state{ handle = {PoolIdx, DbIdx}, cookie = 
 	{noreply, State};
 
 handle_call(db_close, _From, State = #state{ handle = {PoolIdx, DbIdx} }) ->
-	io:format("part_srv:!db_close...~n", []),
-	Ret = kyte_nifs:execute_sync(fun(Ref) ->
+	_Ret = kyte_nifs:execute_sync(fun(Ref) ->
 		kyte_nifs:db_close(self(), Ref, PoolIdx, DbIdx)
 	end),
-	io:format("part_srv:!db_close ~p~n", [Ret]),
 	{stop, normal, ok, State # state{
 		handle = undefined
 	}};
@@ -93,8 +91,7 @@ handle_call(db_close_rude, _From, State = #state{ handle = {PoolIdx, DbIdx} }) -
 	end),
 	{stop, rudely_closed, ok, State};
 
-handle_call(Request, From, State = #state{}) ->
-	io:format("~p got ~p from ~p~n", [self(), Request, From]),
+handle_call(Request, _From, State = #state{}) ->
 	{stop, {bad_arg, Request}, State}.
 
 handle_cast(Request, State = #state{}) ->
@@ -110,22 +107,18 @@ handle_info({'EXIT', Pid, Reason}, State = #state{}) ->
 handle_info(Message, State = #state{}) ->
 	{stop, {bad_arg, Message}, State}.
 
-terminate(Reason, _State = #state{
+terminate(_Reason, _State = #state{
 	handle = undefined
 }) ->
-	io:format("[~p] kyte_db_partition: terminating with no handle (reason: ~p)~n", [self(), Reason]),
 	ok;
 
-terminate(Reason, _State = #state{
+terminate(_Reason, _State = #state{
 	handle = {PoolIdx, DbIdx}
 }) ->
 	% terminating
-	io:format("[~p] kyte_db_partition_srv:terminate/3 (reason: ~p)~n", [self(), Reason]),
-	Ret = kyte_nifs:execute_sync(fun(Ref) ->
-		io:format("[~p] kyte_db_partition_srv:terminate/3 inside fun~n", [self()]),
+	_Ret = kyte_nifs:execute_sync(fun(Ref) ->
 		kyte_nifs:db_close(self(), Ref, PoolIdx, DbIdx)
 	end),
-	io:format("[~p] kyte_db_partition_srv:terminate/3 Ret: ~p~n", [self(), Ret]),
 	ok.
 
 code_change(_OldVsn, State, _Extra) ->

@@ -19,27 +19,41 @@ Usage:
 		| rawz  % raw binaries are zipped (with zlib:zip/1)
 		| etfz. % the terms are converted to ETF and zipped
 	
-	-type kyte_partitioning_policy() ::
+	
+	-type hash_fun_term() :: fun( ( any() ) -> integer() ).
+	-type hash_fun_bin() :: fun( ( binary() ) -> integer() ).
+
+	-type kyte_partitioning_type() ::
 		  single 
+		| {pre_hash, Count :: integer(), HF :: hash_fun_term() }
 		| {post_hash, Count :: integer(), HF :: hash_fun_bin() }.
 
 	-record(kyte_db_args, {
 		file :: string(),
-
+		
 		key_codec = etf :: kyte_value_codec(),
 		val_codec = etf :: kyte_value_codec(),
 
-		parts :: kyte_partitioning_policy()
+		parts = single :: kyte_partitioning_type()
 	}).
+	
+	-type kyte_db_args() :: #kyte_db_args{}.
 
-	-type kyte_db() :: {pid(), #kyte_db_args{}}. % WARNING! Please do not rely on this type's internals: this may (and most likely will) be changed in future.
+	-type kyte_db() :: pid().
+	
+	-spec pool_create( PoolSize ::integer() ) -> {ok, Pool :: pid()} | {error, any()}.
+	-spec pool_destroy( Pool :: pid() ) -> ok | {error, any()}.
 
-	-spec db_open(Pool :: pid(), DbArgs :: #kyte_db_args{} ) -> {ok, kyte_db()} | {error, any()}.
-	-spec db_close(kyte_db()) -> ok | {error, any()}.
+	-spec db_open( Pool :: pid(), kyte_db_args() ) -> {ok, DbSrv :: pid() }.
+	-spec db_close( DbSrv :: pid() ) -> ok.
 
-	-spec db_set(kyte_db(), term(), term()) -> ok | {error, any()}.
-	-spec db_del(kyte_db(), term()) -> ok | {error, any()}.
-	-spec db_get(kyte_db(), term()) -> {ok, term()} | {error, any()}.
+	-spec db_set( DbSrv :: pid(), K :: term(), V :: term() ) -> ok | {error, any()}.
+	-spec db_get( DbSrv :: pid(), K :: term() ) -> {ok, Value :: term()} | {error, any()}.
+	-spec db_del( DbSrv :: pid(), K :: term() ) -> ok | {error, any()}.
+
+	-spec db_count( DbSrv :: pid() ) -> {ok, integer()} | {error, any()}.
+	-spec db_size( DbSrv :: pid() ) -> {ok, integer()} | {error, any()}.
+	-spec db_clear( DbSrv :: pid() ) -> ok | {error, any()}.
 
 
 

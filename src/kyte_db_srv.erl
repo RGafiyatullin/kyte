@@ -34,17 +34,15 @@
 start_link(Pool, Args) ->
 	gen_server:start_link(?MODULE, {Pool, Args}, []).
 
-init({Pool, Args = #kyte_db_args{
+init({Pool, _Args = #kyte_db_args{
 	file = DbFile,
 	parts = DbPartsType,
 	key_codec = KCodec,
 	val_codec = VCodec
 }}) ->
-	io:format("kyte_db_srv:init({~p, ~p})~n", [Pool, Args]),
 	{ok, PartsSup} = kyte_db_partition_sup:start_link(),
 	PartsCtx = kyte_parts:init(Pool, self(), PartsSup, DbFile, DbPartsType),
 	{ok, ReqsSup} = kyte_db_request_sup:start_link(),
-	io:format("kyte_db_srv inited~n"),
 	{ok, #state{
 		parts_sup = PartsSup,
 		reqs_sup = ReqsSup,
@@ -56,9 +54,7 @@ init({Pool, Args = #kyte_db_args{
 handle_call(db_close, _From, State = #state{
 	parts_ctx = PartsCtx
 }) ->
-	io:format("kyte_db_srv:!db_close 1~n", []),
 	ok = kyte_parts:close_partitions(PartsCtx),
-	io:format("kyte_db_srv:!db_close 2~n", []),
 	{stop, normal, ok, State};
 
 handle_call(Op = {db_set, _K, _V}, From, State = #state{ 
