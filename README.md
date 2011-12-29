@@ -100,11 +100,13 @@ A: When the zip product is bigger than the source. E.g. short pieces of data: in
 <code>
 -spec pool_create( PoolSize :: integer() ) -> {ok, Pool :: pid()} | {error, any()}.
 </code>
+
 Create and link to the calling process a pool of the given size.
 
 <code>
 -spec pool_destroy( Pool :: pid() ) -> ok | {error, any()}.
 </code>
+
 Destroy the pool. The pool will terminate with 'normal' reason. The affiliated databases will terminate with the 'rudely_closed' reason.
 
 <code>
