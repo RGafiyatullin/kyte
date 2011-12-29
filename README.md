@@ -74,14 +74,22 @@ Any of the following codecs can be used for keys or values:
 
 *	*etf* - Any Erlang terms are allowed. They are converted to ETF (with erlang:term_to_binary/1) the product binaries are saved.
 
-*	*sext* - Any Erlang terms are allowed. They are converted to SEXT (with [sext:encode/1](https://github.com/uwiger/sext))
-
+*	*sext* - Any Erlang terms are allowed. They are converted to SEXT ([sext:encode/1](https://github.com/uwiger/sext)).
 This is completely useless for the Values. 
 Though it might be good for encoding the Keys: in future iteration through the collections is planned to be implemented.
 
 *	*rawz* - Same as *raw* but the binaries are zipped prior to be saved (with zlib:zip/1)
 
 *	*etfz* - Same as *etf* but the binaries are zipped prior to be saved.
+
+
+### To zip or not to zip?
+
+Q: Why do I want to zip anything? Doesn't it consume the CPU.
+A: Yes, but it may save the IO.
+
+Q: When should I rather not zip?
+A: When the zip product is bigger than the source. E.g. short pieces of data: integers, UUIDs, logins - most of the keys' types.
 
 
 ## API
