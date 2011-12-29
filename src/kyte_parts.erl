@@ -3,17 +3,12 @@
 
 -module(kyte_parts).
 
-% -export([
-% 	file_names/2,
-% 	choose_partition/3,
-% 	with_partition/4
-% 	]).
-
 -export([
 	init/5,
 	partition_init_notify/3,
 	close_partitions/1,
-	fold/3
+	fold/3,
+	choose_partition/3
 ]).
 
 -include("kyte.hrl").
@@ -29,6 +24,9 @@
 -spec init(pid(), pid(), pid(), string(), kyte_partitioning_type()) -> state().
 -spec partition_init_notify( state(), part_id(), pid() ) -> state().
 -spec close_partitions(state()) -> ok.
+
+-type fold_fun() :: any(). %% fun((pid(), any()) -> any()).
+-spec fold(state(), fold_fun(), any()) -> any().
 
 init( Pool, DbSrv, PartsSup, DbFile, single) ->
 	{ok, SinglePartSpec} = spec_single_partition(single, Pool, DbSrv, DbFile),
@@ -73,12 +71,26 @@ close_partitions(#state{
 fold(#state{
 	partitions = Dict
 }, Fun, Acc0) ->
-	Acc = lists:foldl( 
+	lists:foldl( 
 		fun({_ID, P}, A) -> Fun(P, A) end, 
-		Acc0, dict:to_list(Dict) ),
-	{ok, Acc}.
+	Acc0, dict:to_list(Dict) ).
 
 
+choose_partition(#state{
+	type = single,
+	partitions = Dict
+}, _K, _Kenc) ->
+	dict:fetch(single, Dict);
+
+choose_partition(#state{
+	type = {post_hash, Count, HashF},
+	partitions = Dict
+}, _K, Kenc) ->
+	Kh = HashF(Kenc),
+	Bits = size(Kh) * 8,
+	<<Hash:Bits/unsigned>> = Kh,
+	PartIdx = ( Hash rem Count ) + 1,
+	dict:fetch({part, PartIdx}, Dict).
 
 
 %%% Internal

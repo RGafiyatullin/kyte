@@ -25,7 +25,8 @@
 -record(state, {
 	parts_sup :: pid(),
 	parts_ctx :: term(),
-	reqs_sup :: pid()
+	reqs_sup :: pid(),
+	codecs :: {kyte_value_codec(), kyte_value_codec()}
 }).
 
 -spec start_link(pid(), kyte_db_args()) -> {ok, pid()}.
@@ -35,7 +36,9 @@ start_link(Pool, Args) ->
 
 init({Pool, Args = #kyte_db_args{
 	file = DbFile,
-	parts = DbPartsType
+	parts = DbPartsType,
+	key_codec = KCodec,
+	val_codec = VCodec
 }}) ->
 	io:format("kyte_db_srv:init({~p, ~p})~n", [Pool, Args]),
 	{ok, PartsSup} = kyte_db_partition_sup:start_link(),
@@ -45,7 +48,8 @@ init({Pool, Args = #kyte_db_args{
 	{ok, #state{
 		parts_sup = PartsSup,
 		reqs_sup = ReqsSup,
-		parts_ctx = PartsCtx
+		parts_ctx = PartsCtx,
+		codecs = { KCodec, VCodec }
 	}}.
 
 
@@ -59,44 +63,50 @@ handle_call(db_close, _From, State = #state{
 
 handle_call(Op = {db_set, _K, _V}, From, State = #state{ 
 	parts_ctx = PartsCtx, 
-	reqs_sup = ReqsSup
+	reqs_sup = ReqsSup,
+	codecs = Codecs
 }) ->
-	perform_operation(ReqsSup, PartsCtx, Op, From),
+	perform_operation(ReqsSup, PartsCtx, Codecs, Op, From),
 	{noreply, State};
 
 handle_call(Op = {db_get, _K}, From, State = #state{ 
 	parts_ctx = PartsCtx, 
-	reqs_sup = ReqsSup
+	reqs_sup = ReqsSup,
+	codecs = Codecs
 }) ->
-	perform_operation(ReqsSup, PartsCtx, Op, From),
+	perform_operation(ReqsSup, PartsCtx, Codecs, Op, From),
 	{noreply, State};
 
 handle_call(Op = {db_del, _K}, From, State = #state{ 
 	parts_ctx = PartsCtx, 
-	reqs_sup = ReqsSup
+	reqs_sup = ReqsSup,
+	codecs = Codecs
 }) ->
-	perform_operation(ReqsSup, PartsCtx, Op, From),
+	perform_operation(ReqsSup, PartsCtx, Codecs, Op, From),
 	{noreply, State};
 
 handle_call(Op = db_clear, From, State = #state{ 
 	parts_ctx = PartsCtx, 
-	reqs_sup = ReqsSup
+	reqs_sup = ReqsSup,
+	codecs = Codecs
 }) ->
-	perform_operation(ReqsSup, PartsCtx, Op, From),
+	perform_operation(ReqsSup, PartsCtx, Codecs, Op, From),
 	{noreply, State};
 
 handle_call(Op = db_count, From, State = #state{ 
 	parts_ctx = PartsCtx, 
-	reqs_sup = ReqsSup
+	reqs_sup = ReqsSup,
+	codecs = Codecs
 }) ->
-	perform_operation(ReqsSup, PartsCtx, Op, From),
+	perform_operation(ReqsSup, PartsCtx, Codecs, Op, From),
 	{noreply, State};
 
 handle_call(Op = db_size, From, State = #state{ 
 	parts_ctx = PartsCtx, 
-	reqs_sup = ReqsSup
+	reqs_sup = ReqsSup,
+	codecs = Codecs
 }) ->
-	perform_operation(ReqsSup, PartsCtx, Op, From),
+	perform_operation(ReqsSup, PartsCtx, Codecs, Op, From),
 	{noreply, State};
 
 
@@ -130,7 +140,7 @@ partition_init_notify(DbSrv, ID, PartSrv) ->
 
 %%% Internal
 
-perform_operation(Sup, PartsCtx, Op, ReplyTo) ->
-	{ok, ReqSrv} = supervisor:start_child(Sup, [PartsCtx, Op, ReplyTo]),
+perform_operation(Sup, PartsCtx, Codecs, Op, ReplyTo) ->
+	{ok, ReqSrv} = supervisor:start_child(Sup, [PartsCtx, Codecs, Op, ReplyTo]),
 	kyte_db_request_srv:execute(ReqSrv).
 

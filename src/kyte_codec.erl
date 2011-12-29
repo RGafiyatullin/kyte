@@ -4,34 +4,13 @@
 -module(kyte_codec).
 
 -export([
-	encode_key/2,
-
-	encode_value/2,
-	decode_value/2
+	encode/2,
+	decode/2
 ]).
 
 -include("kyte.hrl").
 
-encode_key(K, #kyte_db_args{
-	key_codec = C
-}) ->
-	encode_with(C, K).
-
-encode_value(V, #kyte_db_args{
-	val_codec = C
-}) ->
-	encode_with(C, V).
-
-
-decode_value(V, #kyte_db_args{
-	val_codec = C
-}) ->
-	decode_with(C, V).
-
-
-%%% Internal
-
-encode_with(C, V) ->
+encode(C, V) ->
 	case C of
 		raw ->
 			V;
@@ -46,7 +25,7 @@ encode_with(C, V) ->
 	end.
 
 
-decode_with(C, V) ->
+decode(C, V) ->
 	case C of
 		raw ->
 			V;
