@@ -110,42 +110,58 @@ Destroy the pool. The pool will terminate with 'normal' reason. The affiliated d
 <code>
 -spec db_open( Pool :: pid(), kyte_db_args() ) -> {ok, DbSrv :: pid() }.
 </code>
+
 Open a database. See #kyte_db_args for details.
+
 
 <code>
 -spec db_close( DbSrv :: pid() ) -> ok.
 </code>
+
 Close the database. It will terminate with 'normal' reason.
+
 
 <code>
 -spec db_set( DbSrv :: pid(), Key :: term(), Value :: term() ) -> ok | {error, any()}.
 </code>
+
 Store Key-Value pair in the database DbSrv.
+
 
 <code>
 -spec db_get( DbSrv :: pid(), Key :: term() ) -> {ok, Value :: term()} | {error, any()}.
 </code>
+
 This function searches for a Key in the database.
+
 
 <code>
 -spec db_del( DbSrv :: pid(), Key :: term() ) -> ok | {error, any()}.
 </code>
+
 Removes the Key from the database.
+
 
 <code>
 -spec db_count( DbSrv :: pid() ) -> {ok, integer()} | {error, any()}.
 </code>
+
 Gets rows' count in the database.
+
 
 <code>
 -spec db_size( DbSrv :: pid() ) -> {ok, integer()} | {error, any()}.
 </code>
+
 Returns the size of the database in bytes.
+
 
 <code>
 -spec db_clear( DbSrv :: pid() ) -> ok | {error, any()}.
 </code>
+
 Clears the database.
+
 
 <code>
 -type hash_fun_bin() :: fun( ( binary() ) -> integer() ).
