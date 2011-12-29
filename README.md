@@ -70,11 +70,28 @@ The keys and values are encoded prior to be saved in the database.
 
 Any of the following codecs can be used for keys or values:
 
-*	*raw* raw binaries
-*	*etf* the erlang terms are converted to ETF (with erlang:term_to_binary/1)
-*	*sext* the erlang terms are converted to SEXT (with sext:encode/1)
-*	*rawz* raw binaries are zipped (with zlib:zip/1)
-*	*etfz* the terms are converted to ETF and zipped
+*	*raw* 
+
+Only raw binaries are expected. Those are stored as they are.
+
+*	*etf* 
+
+Any Erlang terms are allowed. They are converted to ETF (with erlang:term_to_binary/1) the product binaries are saved.
+
+*	*sext* 
+
+Any Erlang terms are allowed. They are converted to SEXT (with [sext:encode/1](https://github.com/uwiger/sext))
+
+This is completely useless for the Values. 
+Though it might be good for encoding the Keys: in future iteration through the collections is planned to be implemented.
+
+*	*rawz* 
+
+Same as *raw* but the binaries are zipped prior to be saved (with zlib:zip/1)
+
+*	*etfz*
+
+Same as *etf* but the binaries are zipped prior to be saved.
 
 
 ## API
