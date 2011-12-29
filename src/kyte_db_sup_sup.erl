@@ -26,5 +26,5 @@ start_link() ->
 
 init({}) ->
     {ok, { {simple_one_for_one, 5, 10}, [
-    	{db_sup, {kyte_db_sup, start_link, []}, temporary, infinity, supervisor, [kyte_db_sup]}
+    	{db_sup, {kyte_db_srv, start_link, []}, temporary, infinity, supervisor, [kyte_db_sup]}
     ]} }.

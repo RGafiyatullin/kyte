@@ -57,7 +57,9 @@ close_partitions(#state{
 }) ->
 	lists:foreach( fun({_, PartSrv}) ->
 		io:format("Shutting down ~p~n", [PartSrv]),
-		ok = gen_server:call(PartSrv, db_close, infinity)
+		Ret = gen_server:call(PartSrv, db_close, infinity),
+		io:format("Shutting down ~p -> ~p~n", [PartSrv, Ret]),
+		timer:sleep(5000)
 	end, dict:to_list(Dict) ),
 	ok.
 
@@ -83,7 +85,7 @@ spec_single_partition( ID, Pool, DbSrv, DbFile ) ->
 	{ ok, 
 		{ ID, 
 			{ kyte_db_partition_srv, start_link, [ ID, Pool, DbSrv, DbFile ] }, 
-			permanent, 30000, worker, [ kyte_db_partition_srv ] 
+			transient, 30000, worker, [ kyte_db_partition_srv ] 
 		}
 	}.
 

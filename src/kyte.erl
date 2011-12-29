@@ -31,8 +31,7 @@ pool_destroy( Pool ) ->
 %%% DB operations
 
 db_open(Pool, Args = #kyte_db_args{}) ->
-	{ok, _Sup, DbSrv} = supervisor:start_child( kyte_db_sup_sup, [ Pool, Args ] ),
-	{ok, DbSrv}.
+	{ok, _DbSrv} = supervisor:start_child( kyte_db_sup_sup, [ Pool, Args ] ).
 
 db_close(DbSrv) ->
 	gen_server:call(DbSrv, db_close, infinity).

@@ -76,6 +76,9 @@ handle_info( {'DOWN', _MonRef, process, DbPartSrv, _Reason}, State = #state{
 			{noreply, State}
 	end;
 
+handle_info({'EXIT', Pid, Reason}, State = #state{}) ->
+	{stop, {killed, Pid, Reason}, State};
+
 handle_info(Message, State = #state{}) ->
 	{stop, {bad_arg, Message}, State}.
 
