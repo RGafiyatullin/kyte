@@ -37,7 +37,6 @@ Storing:
 <code>
 Key = {this, is, 'a key'},
 Value = ["that", <<"is">>, ["a", "value"], "!"],
-
 ok = kyte:db_set(Db, Key, Value).
 </code>
 
@@ -63,3 +62,48 @@ ok = kyte:db_close(Db).
 
 Actually you do not often have to close your databases manually.
 They are linked and will close with the 'owning' process when it's being halted with the reason 'shutdown'.
+
+## API
+
+<code>
+-spec pool_create( PoolSize :: integer() ) -> {ok, Pool :: pid()} | {error, any()}.
+</code>
+
+<code>
+-spec pool_destroy( Pool :: pid() ) -> ok | {error, any()}.
+</code>
+
+<code>
+-spec db_open( Pool :: pid(), kyte_db_args() ) -> {ok, DbSrv :: pid() }.
+</code>
+
+<code>
+-spec db_close( DbSrv :: pid() ) -> ok.
+</code>
+
+<code>
+-spec db_set( DbSrv :: pid(), K :: term(), V :: term() ) -> ok | {error, any()}.
+</code>
+
+<code>
+-spec db_get( DbSrv :: pid(), K :: term() ) -> {ok, Value :: term()} | {error, any()}.
+</code>
+
+<code>
+-spec db_del( DbSrv :: pid(), K :: term() ) -> ok | {error, any()}.
+</code>
+
+<code>
+-spec db_count( DbSrv :: pid() ) -> {ok, integer()} | {error, any()}.
+</code>
+
+<code>
+-spec db_size( DbSrv :: pid() ) -> {ok, integer()} | {error, any()}.
+</code>
+
+<code>
+-spec db_clear( DbSrv :: pid() ) -> ok | {error, any()}.
+</code>
+
+
+
