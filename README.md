@@ -167,17 +167,13 @@ Clears the database.
 
 <code>
 -type hash_fun_bin() :: fun( ( binary() ) -> integer() ).
-
 -type kyte_partitioning_type() ::
 	  single 
 	| {post_hash, Count :: integer(), HashF :: hash_fun_bin() }.
-
 -record(kyte_db_args, {
 	file :: string(),
-	
 	key_codec = etf :: kyte_value_codec(),
 	val_codec = etf :: kyte_value_codec(),
-
 	parts = single :: kyte_partitioning_type()
 }).
 </code>
