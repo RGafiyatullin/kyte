@@ -63,6 +63,20 @@ ok = kyte:db_close(Db).
 Actually you do not often have to close your databases manually.
 They are linked and will close with the 'owning' process when it's being halted with the reason 'shutdown'.
 
+
+## How the values are stored
+
+The keys and values are encoded prior to be saved in the database.
+
+Any of the following codecs can be used for keys or values:
+
+*	*raw* raw binaries
+*	*etf* the erlang terms are converted to ETF (with erlang:term_to_binary/1)
+*	*sext* the erlang terms are converted to SEXT (with sext:encode/1)
+*	*rawz* raw binaries are zipped (with zlib:zip/1)
+*	*etfz* the terms are converted to ETF and zipped
+
+
 ## API
 
 <code>
