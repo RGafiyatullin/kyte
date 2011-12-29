@@ -12,7 +12,8 @@
 -export([
 	init/5,
 	partition_init_notify/3,
-	close_partitions/1
+	close_partitions/1,
+	fold/3
 ]).
 
 -include("kyte.hrl").
@@ -69,7 +70,13 @@ close_partitions(#state{
 	end, dict:to_list(Dict) ),
 	ok.
 
-
+fold(#state{
+	partitions = Dict
+}, Fun, Acc0) ->
+	Acc = lists:foldl( 
+		fun({_ID, P}, A) -> Fun(P, A) end, 
+		Acc0, dict:to_list(Dict) ),
+	{ok, Acc}.
 
 
 

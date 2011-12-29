@@ -24,7 +24,8 @@
 
 -record(state, {
 	parts_sup :: pid(),
-	parts_ctx :: term()
+	parts_ctx :: term(),
+	reqs_sup :: pid()
 }).
 
 -spec start_link(pid(), kyte_db_args()) -> {ok, pid()}.
@@ -39,9 +40,11 @@ init({Pool, Args = #kyte_db_args{
 	io:format("kyte_db_srv:init({~p, ~p})~n", [Pool, Args]),
 	{ok, PartsSup} = kyte_db_partition_sup:start_link(),
 	PartsCtx = kyte_parts:init(Pool, self(), PartsSup, DbFile, DbPartsType),
+	{ok, ReqsSup} = kyte_db_request_sup:start_link(),
 	io:format("kyte_db_srv inited~n"),
 	{ok, #state{
 		parts_sup = PartsSup,
+		reqs_sup = ReqsSup,
 		parts_ctx = PartsCtx
 	}}.
 
@@ -54,25 +57,47 @@ handle_call(db_close, _From, State = #state{
 	io:format("kyte_db_srv:!db_close 2~n", []),
 	{stop, normal, ok, State};
 
-handle_call({db_set, _K, _V}, _From, State = #state{}) ->
-	{reply, {error, not_impl}, State};
+handle_call(Op = {db_set, _K, _V}, From, State = #state{ 
+	parts_ctx = PartsCtx, 
+	reqs_sup = ReqsSup
+}) ->
+	perform_operation(ReqsSup, PartsCtx, Op, From),
+	{noreply, State};
 
-handle_call({db_get, _K}, _From, State = #state{}) ->
-	{reply, {error, not_impl}, State};
+handle_call(Op = {db_get, _K}, From, State = #state{ 
+	parts_ctx = PartsCtx, 
+	reqs_sup = ReqsSup
+}) ->
+	perform_operation(ReqsSup, PartsCtx, Op, From),
+	{noreply, State};
 
-handle_call({db_del, _K}, _From, State = #state{}) ->
-	{reply, {error, not_impl}, State};
+handle_call(Op = {db_del, _K}, From, State = #state{ 
+	parts_ctx = PartsCtx, 
+	reqs_sup = ReqsSup
+}) ->
+	perform_operation(ReqsSup, PartsCtx, Op, From),
+	{noreply, State};
 
-handle_call(db_clear, _From, State = #state{}) ->
-	{reply, {error, not_impl}, State};
+handle_call(Op = db_clear, From, State = #state{ 
+	parts_ctx = PartsCtx, 
+	reqs_sup = ReqsSup
+}) ->
+	perform_operation(ReqsSup, PartsCtx, Op, From),
+	{noreply, State};
 
-handle_call(db_count, _From, State = #state{}) ->
-	{reply, {error, not_impl}, State};
+handle_call(Op = db_count, From, State = #state{ 
+	parts_ctx = PartsCtx, 
+	reqs_sup = ReqsSup
+}) ->
+	perform_operation(ReqsSup, PartsCtx, Op, From),
+	{noreply, State};
 
-handle_call(db_size, _From, State = #state{}) ->
-	{reply, {error, not_impl}, State};
-
-
+handle_call(Op = db_size, From, State = #state{ 
+	parts_ctx = PartsCtx, 
+	reqs_sup = ReqsSup
+}) ->
+	perform_operation(ReqsSup, PartsCtx, Op, From),
+	{noreply, State};
 
 
 handle_call(Request, _From, State = #state{}) ->
@@ -98,7 +123,14 @@ terminate(_Reason, _State) ->
 code_change(_OldVsn, State, _Extra) ->
 	{ok, State}.
 
+%%% API
 
 partition_init_notify(DbSrv, ID, PartSrv) ->
 	gen_server:cast(DbSrv, {partition_init_notify, ID, PartSrv}).
+
+%%% Internal
+
+perform_operation(Sup, PartsCtx, Op, ReplyTo) ->
+	{ok, ReqSrv} = supervisor:start_child(Sup, [PartsCtx, Op, ReplyTo]),
+	kyte_db_request_srv:execute(ReqSrv).
 
