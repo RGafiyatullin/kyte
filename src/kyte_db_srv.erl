@@ -6,7 +6,7 @@
 -behaviour(gen_server).
 
 -export([
-	start_link/3
+	start_link/4
 ]).
 -export([
 	init/1,
@@ -24,27 +24,35 @@
 
 -record(state, {
 	parts_sup :: pid(),
+	db_sup :: pid(),
 	parts_ctx :: term()
 }).
 
-start_link(Pool, PartsSup, Args) ->
-	gen_server:start_link(?MODULE, {Pool, PartsSup, Args}, []).
+start_link(Pool, DbSup, PartsSup, Args) ->
+	gen_server:start_link(?MODULE, {Pool, DbSup, PartsSup, Args}, []).
 
-init({Pool, PartsSup, Args = #kyte_db_args{
+init({Pool, DbSup, PartsSup, Args = #kyte_db_args{
 	file = DbFile,
 	parts = DbPartsType
 }}) ->
-	%io:format("kyte_db_srv:init({~p, ~p})~n", [Pool, Args]),
+	io:format("kyte_db_srv:init({~p, ~p})~n", [Pool, Args]),
 	PartsCtx = kyte_parts:init(Pool, self(), PartsSup, DbFile, DbPartsType),
+	io:format("kyte_db_srv inited~n"),
 	{ok, #state{
 		parts_sup = PartsSup,
+		db_sup = DbSup,
 		parts_ctx = PartsCtx
 	}}.
 
 handle_call(db_close, _From, State = #state{
-	parts_ctx = PartsCtx
+	parts_ctx = PartsCtx,
+	db_sup = DbSup
 }) ->
 	ok = kyte_parts:close_partitions(PartsCtx),
+	spawn(fun() ->
+		io:format("Stopping db-sup: ~p~n", [DbSup]),
+		supervisor:terminate_child(kyte_db_sup_sup, DbSup)
+	end),
 	{stop, normal, ok, State};
 
 handle_call(Request, _From, State = #state{}) ->

@@ -76,6 +76,7 @@ handle_call(db_clear, From, State = #state{ handle = {PoolIdx, DbIdx}, cookie = 
 	{noreply, State};
 
 handle_call(db_close, _From, State = #state{ handle = {PoolIdx, DbIdx} }) ->
+	io:format("part_srv:db_close...~n"),
 	_Ret = kyte_nifs:execute_sync(fun(Ref) ->
 		kyte_nifs:db_close(self(), Ref, PoolIdx, DbIdx)
 	end),

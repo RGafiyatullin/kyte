@@ -25,9 +25,10 @@
 init( Pool, DbSrv, PartsSup, DbFile, single) ->
 	{ok, SinglePartSpec} = spec_single_partition(single, Pool, DbSrv, DbFile),
 	{ok, SinglePartSrv} = supervisor:start_child(PartsSup, SinglePartSpec),
+	Dict = dict:store(single, SinglePartSrv, dict:new()),
 	#state{
 		type = single,
-		partitions = dict:store(single, SinglePartSrv, dict:new() )
+		partitions = dict:store(single, SinglePartSrv, Dict )
 	};
 
 init( Pool, DbSrv, PartsSup, DbFile, Type = {post_hash, PC, _HF}) ->
@@ -55,6 +56,7 @@ close_partitions(#state{
 	partitions = Dict
 }) ->
 	lists:foreach( fun({_, PartSrv}) ->
+		io:format("Shutting down ~p~n", [PartSrv]),
 		ok = gen_server:call(PartSrv, db_close, infinity)
 	end, dict:to_list(Dict) ),
 	ok.

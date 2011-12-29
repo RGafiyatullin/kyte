@@ -22,7 +22,7 @@
 start_link(Pool, DbArgs = #kyte_db_args{}) ->
     { ok, Sup } = supervisor:start_link( ?MODULE, { Pool, DbArgs } ),
     { ok, PartsSup } = supervisor:start_child( Sup, spec_parts_sup() ),
-    { ok, DbSrv } = supervisor:start_child( Sup, spec_db_srv(Pool, PartsSup, DbArgs) ),
+    { ok, DbSrv } = supervisor:start_child( Sup, spec_db_srv(Pool, Sup, PartsSup, DbArgs) ),
     { ok, Sup, DbSrv }.
 
 %% ===================================================================
@@ -33,7 +33,7 @@ init({Pool, DbArgs}) ->
     {ok, { {one_for_all, 5, 10}, []} }.
 
 spec_parts_sup() ->
-	{parts_sup, {kyte_db_partition_sup, start_link, []}, permanent, infinity, supervisor, [kyte_db_partition_sup]}.
+	{parts_sup, {kyte_db_partition_sup, start_link, []}, transient, infinity, supervisor, [kyte_db_partition_sup]}.
 
-spec_db_srv(Pool, PartsSup, DbArgs) ->
-	{db_srv, {kyte_db_srv, start_link, [Pool, PartsSup, DbArgs]}, permanent, infinity, supervisor, [kyte_db_srv]}.
+spec_db_srv(Pool, DbSup, PartsSup, DbArgs) ->
+	{db_srv, {kyte_db_srv, start_link, [Pool, DbSup, PartsSup, DbArgs]}, transient, infinity, supervisor, [kyte_db_srv]}.
