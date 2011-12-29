@@ -22,6 +22,13 @@
 	partitions :: dict()
 }).
 
+-type state() :: #state{}.
+-type part_id() :: single | {part, integer()}.
+
+-spec init(pid(), pid(), pid(), string(), kyte_partitioning_type()) -> state().
+-spec partition_init_notify( state(), part_id(), pid() ) -> state().
+-spec close_partitions(state()) -> ok.
+
 init( Pool, DbSrv, PartsSup, DbFile, single) ->
 	{ok, SinglePartSpec} = spec_single_partition(single, Pool, DbSrv, DbFile),
 	{ok, SinglePartSrv} = supervisor:start_child(PartsSup, SinglePartSpec),
@@ -58,8 +65,7 @@ close_partitions(#state{
 	lists:foreach( fun({_, PartSrv}) ->
 		io:format("Shutting down ~p~n", [PartSrv]),
 		Ret = gen_server:call(PartSrv, db_close, infinity),
-		io:format("Shutting down ~p -> ~p~n", [PartSrv, Ret]),
-		timer:sleep(5000)
+		io:format("Shutting down ~p -> ~p~n", [PartSrv, Ret])
 	end, dict:to_list(Dict) ),
 	ok.
 
@@ -68,7 +74,7 @@ close_partitions(#state{
 
 
 
-
+%%% Internal
 
 start_multiple_partitions( Dict, 0, _Pool, _DbSrv, _PartsSup, _DbFile ) ->
 	{ok, Dict};

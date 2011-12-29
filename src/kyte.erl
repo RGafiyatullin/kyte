@@ -14,15 +14,23 @@
 start() -> application:start(kyte).
 stop() -> application:stop(kyte).
 
-%%% Pool operations
+
 
 -spec pool_create( PoolSize ::integer() ) -> {ok, Pool :: pid()} | {error, any()}.
+-spec pool_destroy( Pool :: pid() ) -> ok | {error, any()}.
+
+-spec db_open( Pool :: pid(), kyte_db_args() ) -> {ok, DbSrv :: pid() }.
+-spec db_close( DbSrv :: pid() ) -> ok.
+
+
+%%% Pool operations
+
 pool_create( PoolSize ) ->
 	{ok, Pool} = supervisor:start_child(kyte_pool_sup, [PoolSize]),
 	erlang:link(Pool),
 	{ok, Pool}.
 
--spec pool_destroy( Pool :: pid() ) -> ok | {error, any()}.
+
 pool_destroy( Pool ) ->
 	gen_server:call(Pool, shutdown, infinity).
 
@@ -46,22 +54,22 @@ db_partition_close_rude(DbPartSrv) ->
 	end.
 
 db_set(DbSrv, K, V) ->
-	{error, not_impl}.
+	gen_server:call(DbSrv, {db_set, K, V}, infinity).
 
 db_get(DbSrv, K) ->
-	{error, not_impl}.
+	gen_server:call(DbSrv, {db_get, K}, infinity).
 
 db_del(DbSrv, K) ->
-	{error, not_impl}.
+	gen_server:call(DbSrv, {db_del, K}, infinity).
 
 db_clear(DbSrv) ->
-	{error, not_impl}.
+	gen_server:call(DbSrv, db_clear, infinity).
 
 db_count(DbSrv) ->
-	{error, not_impl}.
+	gen_server:call(DbSrv, db_count, infinity).
 
 db_size(DbSrv) ->
-	{error, not_impl}.
+	gen_server:call(DbSrv, db_size, infinity).
 
 %%% Internal
 

@@ -27,6 +27,8 @@
 	parts_ctx :: term()
 }).
 
+-spec start_link(pid(), kyte_db_args()) -> {ok, pid()}.
+
 start_link(Pool, Args) ->
 	gen_server:start_link(?MODULE, {Pool, Args}, []).
 
@@ -43,6 +45,7 @@ init({Pool, Args = #kyte_db_args{
 		parts_ctx = PartsCtx
 	}}.
 
+
 handle_call(db_close, _From, State = #state{
 	parts_ctx = PartsCtx
 }) ->
@@ -50,6 +53,27 @@ handle_call(db_close, _From, State = #state{
 	ok = kyte_parts:close_partitions(PartsCtx),
 	io:format("kyte_db_srv:!db_close 2~n", []),
 	{stop, normal, ok, State};
+
+handle_call({db_set, _K, _V}, _From, State = #state{}) ->
+	{reply, {error, not_impl}, State};
+
+handle_call({db_get, _K}, _From, State = #state{}) ->
+	{reply, {error, not_impl}, State};
+
+handle_call({db_del, _K}, _From, State = #state{}) ->
+	{reply, {error, not_impl}, State};
+
+handle_call(db_clear, _From, State = #state{}) ->
+	{reply, {error, not_impl}, State};
+
+handle_call(db_count, _From, State = #state{}) ->
+	{reply, {error, not_impl}, State};
+
+handle_call(db_size, _From, State = #state{}) ->
+	{reply, {error, not_impl}, State};
+
+
+
 
 handle_call(Request, _From, State = #state{}) ->
 	{stop, {bad_arg, Request}, State}.

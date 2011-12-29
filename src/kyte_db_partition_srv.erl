@@ -26,6 +26,8 @@
 	cookie = make_ref()
 }).
 
+-spec start_link(kyte_parts:part_id(), pid(), pid(), string()) -> {ok, pid()}.
+
 start_link(ID, Pool, DbSrv, DbPath) ->
 	gen_server:start_link(?MODULE, {ID, Pool, DbSrv, DbPath}, []).
 
