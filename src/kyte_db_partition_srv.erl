@@ -6,7 +6,7 @@
 -behaviour(gen_server).
 
 -export([
-	start_link/2
+	start_link/4
 ]).
 -export([
 ]).
@@ -20,21 +20,22 @@
 ]).
 
 -record(state, {
+	part_id :: term(),
 	pool :: pid(),
 	handle :: undefined | {integer(), integer()},
 	cookie = make_ref()
 }).
 
-start_link(Pool, DbPath) ->
-	gen_server:start_link(?MODULE, {Pool, DbPath}, []).
+start_link(ID, Pool, DbSrv, DbPath) ->
+	gen_server:start_link(?MODULE, {ID, Pool, DbSrv, DbPath}, []).
 
-init({Pool, DbPath}) ->
+init({ID, Pool, DbSrv, DbPath}) ->
 	process_flag(trap_exit, true),
 	{ok, PoolIdx} = gen_server:call(Pool, {affiliate_db, self()}, infinity),
-
 	{ok, DbIdx} = kyte_nifs:execute_sync(fun(Ref) ->
 		kyte_nifs:db_open(self(), Ref, PoolIdx, DbPath)
 	end),
+	kyte_db_srv:partition_init_notify(DbSrv, ID, self()),
 	{ok, #state{
 		pool = Pool,
 		handle = {PoolIdx, DbIdx}

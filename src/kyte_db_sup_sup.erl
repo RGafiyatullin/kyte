@@ -1,8 +1,7 @@
 % This file is a part of Kyte released under the MIT licence.
 % See the LICENCE file for more information
 
--module(kyte_sup).
-
+-module(kyte_db_sup_sup).
 -behaviour(supervisor).
 
 %% API
@@ -19,15 +18,13 @@
 %% ===================================================================
 
 start_link() ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+    { ok, _Sup } = supervisor:start_link( {local, ?MODULE}, ?MODULE, {} ).
 
 %% ===================================================================
 %% Supervisor callbacks
 %% ===================================================================
 
-init([]) ->
-    {ok, { {one_for_one, 5, 10}, [
-    	{pool_sup, {kyte_pool_sup, start_link, []}, permanent, infinity, supervisor, [kyte_pool_sup]},
-    	{db_sup_sup, {kyte_db_sup_sup, start_link, []}, permanent, infinity, supervisor, [kyte_db_sup_sup]}
+init({}) ->
+    {ok, { {simple_one_for_one, 5, 10}, [
+    	{db_sup, {kyte_db_sup, start_link, []}, temporary, infinity, supervisor, [kyte_db_sup]}
     ]} }.
-

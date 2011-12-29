@@ -39,13 +39,13 @@ init({PoolSize}) ->
 			{stop, OtherReply}
 	end.
 
-handle_call({affiliate_db, DBSrv}, _From, State = #state{
+handle_call({affiliate_db, DbPartSrv}, _From, State = #state{
 	pool_id = PoolId,
 	affiliated_dbs = Affiliated
 }) ->
-	MonRef = erlang:monitor(process, DBSrv),
+	MonRef = erlang:monitor(process, DbPartSrv),
 	{reply, {ok, PoolId}, State#state{
-		affiliated_dbs = dict:store(DBSrv, MonRef, Affiliated)
+		affiliated_dbs = dict:store(DbPartSrv, MonRef, Affiliated)
 	}};
 
 handle_call(shutdown, _From, State = #state{
@@ -64,13 +64,13 @@ handle_call(Request, _From, State = #state{}) ->
 handle_cast(Request, State = #state{}) ->
 	{stop, {bad_arg, Request}, State}.
 
-handle_info( {'DOWN', _MonRef, process, DBSrv, _Reason}, State = #state{
+handle_info( {'DOWN', _MonRef, process, DbPartSrv, _Reason}, State = #state{
 	affiliated_dbs = Affiliated
 } ) ->
-	case dict:is_key(DBSrv, Affiliated) of
+	case dict:is_key(DbPartSrv, Affiliated) of
 		true ->
 			{noreply, State #state{
-				affiliated_dbs = dict:erase(DBSrv, Affiliated)
+				affiliated_dbs = dict:erase(DbPartSrv, Affiliated)
 			}};
 		_ ->
 			{noreply, State}
@@ -98,9 +98,9 @@ code_change(_OldVsn, State, _Extra) ->
 
 stop_affiliated_dbs(Dict) ->
 	List = dict:to_list(Dict),
-	lists:foreach(fun({DbSrv, MonRef}) ->
+	lists:foreach(fun({DbPartSrv, MonRef}) ->
 		erlang:demonitor(MonRef),
-		kyte:db_close_rude(DbSrv)
+		kyte:db_partition_close_rude(DbPartSrv)
 	end, List ),
 	ok.
 

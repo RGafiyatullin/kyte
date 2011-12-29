@@ -10,34 +10,85 @@
 % 	]).
 
 -export([
-	init/3
+	init/5,
+	partition_init_notify/3,
+	close_partitions/1
 ]).
+
+-include("kyte.hrl").
 
 -record(state, {
 	type :: kyte_partitioning_type(),
-	partitions :: [pid()]
+	partitions :: dict()
 }).
 
-init(Pool, DbFile, single) ->
-	{ok, SinglePart} = start_single_partition(Pool, DbFile),
+init( Pool, DbSrv, PartsSup, DbFile, single) ->
+	{ok, SinglePartSpec} = spec_single_partition(single, Pool, DbSrv, DbFile),
+	{ok, SinglePartSrv} = supervisor:start_child(PartsSup, SinglePartSpec),
 	#state{
 		type = single,
-		partitions = SinglePart
+		partitions = dict:store(single, SinglePartSrv, dict:new() )
 	};
 
-init(Pool, DbFile, Type = {post_hash, PC, HF}) ->
-	{ok, PartsList} = start_multiple_parts(Pool, DbFile, PC),
+init( Pool, DbSrv, PartsSup, DbFile, Type = {post_hash, PC, _HF}) ->
+	{ok, Dict} = start_multiple_partitions(dict:new(), PC, Pool, DbSrv, PartsSup, DbFile),
 	#state{
 		type = Type,
-		partitions = PartsList
+		partitions = Dict
 	}.
 
+partition_init_notify( PartsCtx = #state{ type = single }, single, PartSrv ) ->
+	{ ok, PartsCtx #state{
+		partitions = dict:store( single, PartSrv, dict:new() )
+	} };
 
-start_single_partition(Pool, DbFile) ->
-	{error, not_impl}.
+partition_init_notify( PartsCtx = #state{ 
+							type = {post_hash, _PC, _HF},
+							partitions = Dict
+						}, ID, PartSrv
+) ->
+	{ ok, PartsCtx #state{
+		partitions = dict:store( ID, PartSrv, Dict )
+	} }.
 
-start_multiple_parts(Pool, DbFile, PC) ->
-	{error, not_impl}.
+close_partitions(#state{
+	partitions = Dict
+}) ->
+	lists:foreach( fun({_, PartSrv}) ->
+		ok = gen_server:call(PartSrv, db_close, infinity)
+	end, dict:to_list(Dict) ),
+	ok.
+
+
+
+
+
+
+
+
+start_multiple_partitions( Dict, 0, _Pool, _DbSrv, _PartsSup, _DbFile ) ->
+	{ok, Dict};
+
+start_multiple_partitions( Dict, PC, Pool, DbSrv, PartsSup, DbFile ) ->
+	{ ok, PartSpec } = spec_single_partition( { part, PC }, Pool, DbSrv, file_name( DbFile, PC ) ),
+	{ ok, PartSrv } = supervisor:start_child( PartsSup, PartSpec ),
+	start_multiple_partitions(
+		dict:store({part, PC}, PartSrv, Dict),
+		PC - 1, Pool, DbSrv, PartsSup, DbFile
+	).
+
+spec_single_partition( ID, Pool, DbSrv, DbFile ) ->
+	{ ok, 
+		{ ID, 
+			{ kyte_db_partition_srv, start_link, [ ID, Pool, DbSrv, DbFile ] }, 
+			permanent, 30000, worker, [ kyte_db_partition_srv ] 
+		}
+	}.
+
+file_name(DbFile, Part ) ->
+	lists:flatten( io_lib:format( DbFile, [ Part ] ) ).
+
+
 
 
 % file_names(DbFile, PartsCount) ->
