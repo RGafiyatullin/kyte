@@ -1,7 +1,7 @@
 % This file is a part of Kyte released under the MIT licence.
 % See the LICENCE file for more information
 
--module(kyte_db_sup_sup).
+-module(kyte_db_sup).
 -behaviour(supervisor).
 
 %% API
