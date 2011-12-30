@@ -36,7 +36,7 @@ Storing:
 
 <pre>
 Key = {this, is, 'a key'},
-Value = ["that", <<"is">>, ["a", "value"], "!"],
+Value = ["that", &lt;&lt;"is"&gt;&gt;, ["a", "value"], "!"],
 ok = kyte:db_set(Db, Key, Value).
 </pre>
 
