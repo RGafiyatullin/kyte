@@ -9,6 +9,8 @@
 -export([db_set/3, db_del/2, db_get/2]).
 -export([db_clear/1, db_size/1, db_count/1]).
 
+-export([parts_post_hash_md5/1, parts_post_hash_sha/1]).
+
 -include("kyte.hrl").
 
 start() -> application:start(kyte).
@@ -76,6 +78,15 @@ db_count(DbSrv) ->
 
 db_size(DbSrv) ->
 	gen_server:call(DbSrv, db_size, infinity).
+
+
+%%% Partitioning helper
+
+parts_post_hash_md5(PartsCount) ->
+	{post_hash, PartsCount, fun crypto:md5/1 }.
+
+parts_post_hash_sha(PartsCount) ->
+	{post_hash, PartsCount, fun crypto:sha/1 }.
 
 %%% Internal
 
