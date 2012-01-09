@@ -15,25 +15,31 @@ namespace kyte {
 	void DbGetTask::Run() {
 		if (!EnsureDB()) return;
 		ErlNifBinary binKey;
-		assert( enif_inspect_iolist_as_binary(Env(), _Key, &binKey) == true );
+		assert( enif_inspect_iolist_as_binary( Env(), _Key, &binKey ) == true );
 
-		unsigned char* vbuff = new unsigned char[KYTE_MAX_RECORD_SIZE];
+		ErlNifBinary binValue;
+		if ( !enif_alloc_binary( KYTE_MAX_RECORD_SIZE, &binValue) ) {
+			Reply( enif_make_tuple2( Env(),
+				enif_make_atom(Env(), "error"),
+				enif_make_string(Env(), "alloc", ERL_NIF_LATIN1)
+			) );
+		}
 		
-		int32_t size = DB()->get((char*)binKey.data, binKey.size, (char*)vbuff, KYTE_MAX_RECORD_SIZE);
+		int32_t size = DB()->get( (char*)binKey.data, binKey.size, (char*) binValue.data, binValue.size );
+
 		if (size == -1) {
-			delete [] vbuff;
-			Reply(enif_make_tuple2( Env(),
+			enif_release_binary( &binValue );
+
+			Reply( enif_make_tuple2( Env(),
 				enif_make_atom(Env(), "error"),
 				enif_make_string(Env(), DB()->error().name(), ERL_NIF_LATIN1)
 			) );
 		}
 		else {
-			ErlNifBinary binValue = {size, vbuff};
-			Reply(enif_make_tuple2( Env(),
+			Reply( enif_make_tuple2( Env(),
 				enif_make_atom(Env(), "ok"),
 				enif_make_binary(Env(), &binValue)
 			) );
-			delete [] vbuff;
 		}
 	}
 
