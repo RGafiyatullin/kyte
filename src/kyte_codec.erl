@@ -10,31 +10,16 @@
 
 -include("kyte.hrl").
 
-encode(C, V) ->
-	case C of
-		raw ->
-			V;
-		rawz ->
-			zlib:zip(V);
-		etf ->
-			term_to_binary(V);
-		etfz ->
-			zlib:zip(term_to_binary(V));
-		sext ->
-			sext:encode(V)
-	end.
+encode(raw, V) -> V;
+encode(rawz, V) -> zlib:zip(V);
+encode(etf, V) -> term_to_binary(V);
+encode(etfz, V) -> zlib:zip(term_to_binary(V));
+encode(sext, V) -> sext:encode(V);
+encode(Other, _V) -> error({bad_codec, Other}).
 
-
-decode(C, V) ->
-	case C of
-		raw ->
-			V;
-		rawx ->
-			zlib:unzip(V);
-		etf ->
-			binary_to_term(V);
-		etfz ->
-			binary_to_term(zlib:unzip(V));
-		sext ->
-			sext:decode(V)
-	end.
+decode(raw, V) -> V;
+decode(rawz, V) -> zlib:unzip(V);
+decode(etf, V) -> binary_to_term(V);
+decode(etfz, V) -> binary_to_term(zlib:unzip(V));
+decode(sext, V) -> sext:decode(V);
+decode(Other, _V) -> error({bad_codec, Other}).
