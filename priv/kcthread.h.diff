@@ -1,0 +1,12 @@
+--- ./kcthread.h.bak	2012-09-04 00:15:02.000000000 +0300
++++ ./kcthread.h	2012-09-04 00:15:58.000000000 +0300
+@@ -240,7 +240,8 @@
+   /** Dummy Operator to forbid the use. */
+   SpinLock& operator =(const SpinLock&);
+   /** Opaque pointer. */
+-  void* opq_;
++  // - void* opq_;
++  int opq_;
+ };
+ 
+ 

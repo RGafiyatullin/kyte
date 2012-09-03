@@ -1,0 +1,11 @@
+--- ./kcthread.cc.bak	2012-09-04 00:14:01.000000000 +0300
++++ ./kcthread.cc	2012-09-04 00:14:49.000000000 +0300
+@@ -618,7 +618,7 @@
+ /**
+  * Default constructor.
+  */
+-SpinLock::SpinLock() : opq_(NULL) {
++SpinLock::SpinLock() : opq_(0) {
+ #if defined(_SYS_MSVC_) || defined(_SYS_MINGW_)
+   _assert_(true);
+ #elif _KC_GCCATOMIC

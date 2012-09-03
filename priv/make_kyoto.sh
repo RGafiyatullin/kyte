@@ -1,20 +1,26 @@
 #!/bin/bash
 
-LDFLAGS=""
-CXXFLAGS=""
-
+export LDFLAGS=""
+export CXXFLAGS=""
+export CXX="clang++"
+SILENT="--silent"
 
 HERE="$(dirname $0)"
 cd "${HERE}"
 KYOTO_PREFIX="$(pwd)/kyoto-root"
 
-KYOTO=kyotocabinet-1.2.70
+KYOTO=kyotocabinet-1.2.76
 
 if [ ! -f "${KYOTO}.tar.gz" ]; then 
 	wget -c "http://fallabs.com/kyotocabinet/pkg/${KYOTO}.tar.gz"
 fi &&
 if [ ! -d "${KYOTO}" ]; then
 	tar xzf "${KYOTO}.tar.gz"
+	(
+		cd ${KYOTO}
+		patch < ../kcthread.h.diff
+		patch < ../kcthread.cc.diff
+	)
 fi &&
 cd "${KYOTO}" &&
 if [ ! -f Makefile ]; then
@@ -23,7 +29,7 @@ else
     :
 fi &&
 if [ ! -d "$KYOTO_PREFIX" ]; then
-	make --silent && make --silent install
+	make $SILENT && make $SILENT install
 fi
 
 
