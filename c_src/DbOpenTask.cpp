@@ -21,8 +21,8 @@ namespace kyte {
 		int dbPos = place_to_the_pool(db, _OpenDatabases, MAX_OPEN_DBS);
 		if ( dbPos == -1 ) {
 			delete db;
-			Reply( enif_make_tuple2(Env(), 
-				enif_make_atom(Env(), "error"), 
+			Reply( enif_make_tuple2(Env(),
+				enif_make_atom(Env(), "error"),
 				enif_make_atom(Env(), "max_db_count_reached")
 			) );
 		}
@@ -35,8 +35,8 @@ namespace kyte {
 			}
 			else {
 				_OpenDatabases[dbPos] = NULL;
-				Reply( enif_make_tuple2(Env(), 
-					enif_make_atom(Env(), "error"), 
+				Reply( enif_make_tuple2(Env(),
+					enif_make_atom(Env(), "error"),
 					enif_make_string(Env(), db->error().name(), ERL_NIF_LATIN1)
 				) );
 				delete db;
