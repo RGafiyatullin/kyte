@@ -27,7 +27,7 @@ namespace kyte {
 			) );
 		}
 		else {
-			if ( db->open(_DbFile, PolyDB::OCREATE | PolyDB::OWRITER) ) {
+		  if ( db->open(_DbFile, PolyDB::OCREATE | PolyDB::OWRITER | PolyDB::OAUTOTRAN) ) {
 				Reply( enif_make_tuple2(Env(),
 					enif_make_atom(Env(), "ok"),
 					enif_make_int(Env(), dbPos)
